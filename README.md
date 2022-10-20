@@ -15,7 +15,7 @@ time. Encryption was not available so if you were to be hacked, your
 complete chat history would be out there as well.
 
 Recently I found my old chatlogs when I was organising my external hard
-drives and old backups. A tri down memory lane with all my Messenger chats
+drives and old backups. A trip down memory lane with all my Messenger chats
 with my friends  between 2003 and 2008 open to read upon. Funny that almost
 all of these  people are no longer part of my life, it literally was a
 different era.
@@ -116,11 +116,12 @@ discover how the Twitter API expects emojis. I ended up with a translation
 array with old notations and the modern unicode for the same emotion.
 
 ### Challenge: Securing the data
-The Daily (Tweet) message will be sent via a cronjob on a server. I added
-encryption on the emails and messages. It's all old data of users who have
-no idea I'm transforming old chats in a database. The biggest challenge was
-choosing a 'simple' library to encrypt based on a private key. I made sure
-I can choose to toggle the encryption so I'm always able to debug locally.
+All the available chatlogs are all old data of users who probably have no
+idea I'm working on this project with this data. For this reason I decided 
+to add encryption. If the live database (for the crontask) would ever be 
+compromised, the data (email/messages) is unreadable. The challenge was to
+implement a 'simple' library to encrypt based on a private key. I made sure
+I can choose to toggle the encryption, so I'm always able to debug locally.
 
 ## Example chats
 For those unfamiliar with the file format of the old MSN chatlogs, I added
@@ -162,6 +163,6 @@ this:
 |    ...Some old chat name :) (oldemail@msn.com)                     |
 |    (#) Someone..      (L) (someoneelse@live.nl)                    |
 |    ...Yes ready for my exams !!! (anotherperson@live.nl)           |
-|    ...Zin om groeten te eten:-D (weeriemand@live.nl)               |
+|    ...Zin om groeten te eten:-D (weeriemand@hotmail.com)           |
 .--------------------------------------------------------------------.
 ```
