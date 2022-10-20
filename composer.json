@@ -1,0 +1,21 @@
+{
+  "name": "antwanvdm/daily-1mb-message",
+  "authors": [
+    {
+      "name": "antwanvdm",
+      "email": "antwanvdm@gmail.com"
+    }
+  ],
+  "require": {
+    "ext-pdo": "*",
+    "nesbot/carbon": "^2.62",
+    "voku/portable-utf8": "^6.0",
+    "abraham/twitteroauth": "^4.0",
+    "paragonie/halite": "^5.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/"
+    }
+  }
+}
