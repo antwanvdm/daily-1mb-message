@@ -123,6 +123,7 @@ class TwitterDMSender
         ':_' => "\u{1F612}",
         ';-' => "\u{1F611}",
         '(stop)' => "\u{1F6D1}",
+        'pik' => "\u{1F346}",
     ];
 
     /**
@@ -131,12 +132,24 @@ class TwitterDMSender
      */
     public function convertChatMessagesToTwitterMessage(array $chatMessages): string
     {
-        $twitterMessage = "\u{1F525} Dagelijkse random selectie van 5 berichten uit onze rijke historie aan chatberichten:" . PHP_EOL . PHP_EOL;
+        $twitterMessage = "\u{1F525} " . $this->getIntroductionString() . PHP_EOL . PHP_EOL;
         foreach ($chatMessages as $chatMessage) {
             $senderString = $this->getMessengerString($chatMessage->messenger);
             $twitterMessage .= "Op {$chatMessage->date} om {$chatMessage->time} stuurde {$senderString}: {$chatMessage->message}" . PHP_EOL . PHP_EOL;
         }
         return str_replace(array_keys($this->emojiConverter), $this->emojiConverter, $twitterMessage);
+    }
+
+    /**
+     * @return string
+     */
+    private function getIntroductionString(): string
+    {
+        return match (date('N')) {
+            4 => 'Dagelijkse random selectie van 5 berichten uit onze rijke historie aan chatberichten die plaatsvonden op de donderdag (#throwbackthrusday):',
+            7 => 'Speciale zondagse selectie (#contextzondag) met 10 berichten die achter elkaar verstuurd zijn:',
+            default => 'Dagelijkse random selectie van 5 berichten uit onze rijke historie aan chatberichten:',
+        };
     }
 
     /**

@@ -59,12 +59,69 @@ class ChatMessage
      * @param int $amount
      * @return ChatMessage[]
      */
+    public static function getByAccountId(int $accountId, int $amount = 5): array
+    {
+        return match (date('N')) {
+            4 => self::getThrowbackThursdayByAccountId($accountId, $amount),
+            7 => self::getContextSundayByAccountId($accountId, 10),
+            default => self::getRandomByAccountId($accountId, $amount),
+        };
+    }
+
+    /**
+     * @param int $accountId
+     * @param int $amount
+     * @return ChatMessage[]
+     */
     public static function getRandomByAccountId(int $accountId, int $amount = 5): array
     {
         $db = \App\Database::getInstance();
         $statement = $db->prepare(
             "SELECT * FROM messages WHERE `account_id` = :account_id ORDER BY RAND() LIMIT :limit"
         );
+        $statement->bindParam('limit', $amount, \PDO::PARAM_INT);
+        $statement->bindParam('account_id', $accountId, \PDO::PARAM_INT);
+        $statement->execute();
+        return $statement->fetchAll(\PDO::FETCH_FUNC, '\\App\\ChatMessage::buildFromPDO');
+    }
+
+    /**
+     * @param int $accountId
+     * @param int $amount
+     * @return ChatMessage[]
+     */
+    public static function getThrowbackThursdayByAccountId(int $accountId, int $amount = 5): array
+    {
+        $db = \App\Database::getInstance();
+        $statement = $db->prepare(
+            "SELECT * FROM messages WHERE `account_id` = :account_id AND WEEKDAY(date) = 3 ORDER BY RAND() LIMIT :limit"
+        );
+        $statement->bindParam('limit', $amount, \PDO::PARAM_INT);
+        $statement->bindParam('account_id', $accountId, \PDO::PARAM_INT);
+        $statement->execute();
+        return $statement->fetchAll(\PDO::FETCH_FUNC, '\\App\\ChatMessage::buildFromPDO');
+    }
+
+    /**
+     * @param int $accountId
+     * @param int $amount
+     * @return ChatMessage[]
+     */
+    public static function getContextSundayByAccountId(int $accountId, int $amount = 5): array
+    {
+        $db = \App\Database::getInstance();
+
+        $statement = $db->prepare(
+            "SELECT id FROM messages WHERE `account_id` = :account_id ORDER BY RAND() LIMIT 1"
+        );
+        $statement->bindParam('account_id', $accountId, \PDO::PARAM_INT);
+        $statement->execute();
+        $id = $statement->fetchColumn();
+
+        $statement = $db->prepare(
+            "SELECT * FROM messages WHERE `account_id` = :account_id AND id >= :id LIMIT :limit"
+        );
+        $statement->bindParam('id', $id, \PDO::PARAM_INT);
         $statement->bindParam('limit', $amount, \PDO::PARAM_INT);
         $statement->bindParam('account_id', $accountId, \PDO::PARAM_INT);
         $statement->execute();
