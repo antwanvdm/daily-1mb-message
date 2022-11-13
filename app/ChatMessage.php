@@ -61,7 +61,7 @@ class ChatMessage
      */
     public static function getByAccountId(int $accountId, int $amount = 5): array
     {
-        return match (date('N')) {
+        return match ((int)date('N')) {
             4 => self::getThrowbackThursdayByAccountId($accountId, $amount),
             7 => self::getContextSundayByAccountId($accountId, 10),
             default => self::getRandomByAccountId($accountId, $amount),
