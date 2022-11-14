@@ -146,8 +146,8 @@ class TwitterDMSender
     private function getIntroductionString(): string
     {
         return match ((int)date('N')) {
-            4 => 'Dagelijkse random selectie van 5 berichten uit onze rijke historie aan chatberichten die plaatsvonden op de donderdag (#throwbackthrusday):',
-            7 => 'Speciale zondagse selectie (#contextzondag) met 10 berichten die achter elkaar verstuurd zijn:',
+            4 => '#throwbackthrusday met een random selectie van 5 berichten uit onze rijke historie aan chatberichten die plaatsvonden op de donderdag:',
+            7 => '#supersunday met een speciale zondagse selectie van 10 berichten die achter elkaar verstuurd zijn:',
             default => 'Dagelijkse random selectie van 5 berichten uit onze rijke historie aan chatberichten:',
         };
     }
