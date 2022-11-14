@@ -62,6 +62,7 @@ class ChatMessage
     public static function getByAccountId(int $accountId, int $amount = 5): array
     {
         return match ((int)date('N')) {
+            2 => self::getHeroesTuesdayByAccountId($accountId, $amount),
             4 => self::getThrowbackThursdayByAccountId($accountId, $amount),
             7 => self::getContextSundayByAccountId($accountId, 10),
             default => self::getRandomByAccountId($accountId, $amount),
@@ -90,11 +91,11 @@ class ChatMessage
      * @param int $amount
      * @return ChatMessage[]
      */
-    public static function getThrowbackThursdayByAccountId(int $accountId, int $amount = 5): array
+    public static function getHeroesTuesdayByAccountId(int $accountId, int $amount = 5): array
     {
         $db = \App\Database::getInstance();
         $statement = $db->prepare(
-            "SELECT * FROM messages WHERE `account_id` = :account_id AND WEEKDAY(date) = 3 ORDER BY RAND() LIMIT :limit"
+            "SELECT * FROM messages WHERE `account_id` = :account_id AND (`message` LIKE '%victor%' OR `message` LIKE '%yannis%' OR `message` LIKE '% andy%' OR `message` LIKE '%daniel%') ORDER BY RAND() LIMIT :limit"
         );
         $statement->bindParam('limit', $amount, \PDO::PARAM_INT);
         $statement->bindParam('account_id', $accountId, \PDO::PARAM_INT);
@@ -107,7 +108,24 @@ class ChatMessage
      * @param int $amount
      * @return ChatMessage[]
      */
-    public static function getContextSundayByAccountId(int $accountId, int $amount = 5): array
+    public static function getThrowbackThursdayByAccountId(int $accountId, int $amount = 5): array
+    {
+        $db = \App\Database::getInstance();
+        $statement = $db->prepare(
+            "SELECT * FROM messages WHERE `account_id` = :account_id AND WEEKDAY(`date`) = 3 ORDER BY RAND() LIMIT :limit"
+        );
+        $statement->bindParam('limit', $amount, \PDO::PARAM_INT);
+        $statement->bindParam('account_id', $accountId, \PDO::PARAM_INT);
+        $statement->execute();
+        return $statement->fetchAll(\PDO::FETCH_FUNC, '\\App\\ChatMessage::buildFromPDO');
+    }
+
+    /**
+     * @param int $accountId
+     * @param int $amount
+     * @return ChatMessage[]
+     */
+    public static function getContextSundayByAccountId(int $accountId, int $amount = 10): array
     {
         $db = \App\Database::getInstance();
 
