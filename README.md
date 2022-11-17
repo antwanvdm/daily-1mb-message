@@ -68,6 +68,9 @@ const CHAT_NAMES_WITH_COLONS_WITH_REPLACEMENTS = [
     ['Antwan :)', ':OMijn dag'],
     ['Antwan', 'Antwan']
 ];
+const SPECIAL_STATUS_OPTIONS = [
+    1 => ['victor', 'yannis', 'andy', 'daniel']
+];
 const SENDER_ACCOUNT_DATABASE_ID = 14;
 const PERSONAL_NAME = 'Antwan';
 const SENDER_NAME = 'Victor';
