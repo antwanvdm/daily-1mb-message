@@ -150,7 +150,7 @@ class ChatMessage
         $id = $statement->fetchColumn();
 
         $statement = $db->prepare(
-            "SELECT * FROM messages WHERE `account_id` = :account_id AND id >= :id LIMIT :limit"
+            "SELECT * FROM messages WHERE `account_id` = :account_id AND `id` >= :id ORDER BY `date`, `time` LIMIT :limit"
         );
         $statement->bindParam('id', $id, PDO::PARAM_INT);
         $statement->bindParam('limit', $amount, PDO::PARAM_INT);
