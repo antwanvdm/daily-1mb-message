@@ -30,7 +30,7 @@ foreach ($chatLogs as $accountEmail => $chatDates) {
     $accountId = $account->save();
     foreach ($chatDates as $date => $chatMessages) {
         foreach ($chatMessages as $chatMessage) {
-            /** @var \App\ChatMessage $chatMessage */
+            /** @var \App\ChatMessages\ChatMessage $chatMessage */
             $chatMessage->save($accountId);
         }
     }

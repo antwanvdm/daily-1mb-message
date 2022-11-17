@@ -74,6 +74,30 @@ const SENDER_NAME = 'Victor';
 const SENDER_TWITTER_ID = 0;
 ```
 
+The raw SQL of the database structure looks like this:
+```sql
+CREATE TABLE `accounts` (
+    `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+    `email` text NOT NULL,
+    `twitter_screen_name` varchar(255) DEFAULT NULL,
+    `twitter_access_token` text DEFAULT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `messages` (
+    `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+    `account_id` int(10) unsigned NOT NULL,
+    `date` date NOT NULL,
+    `time` time NOT NULL,
+    `messenger` tinyint(1) NOT NULL,
+    `message` longtext NOT NULL,
+    `special_status` tinyint(1) NOT NULL,
+    PRIMARY KEY (`id`),
+    KEY `account_id` (`account_id`),
+    CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
 ### Challenge: Charsets
 The chatlogs are pretty old, starting in 2003. These files were not in the
 UTF-8 charset, and different files had different encodings. Writing one
@@ -122,6 +146,16 @@ to add encryption. If the live database (for the crontask) would ever be
 compromised, the data (email/messages) is unreadable. The challenge was to
 implement a 'simple' library to encrypt based on a private key. I made sure
 I can choose to toggle the encryption, so I'm always able to debug locally.
+
+### Challenge: Retrieving records based on search
+The previous challenge clearly defined that all messages are encrypted, so
+I also have the limit that I can't do a text search on the column of the 
+database table. I found out the hard way because I tested a feature locally
+without encryption, and it broke online in the encrypted database. Note to self:
+always test the real scenario :) To make sure I can search, I've added a new
+column that will have a status based on specific search parameters. This way I 
+know a message has a 'special' status and I can filter on the specific status
+when I want to filter my results.
 
 ## Example chats
 For those unfamiliar with the file format of the old MSN chatlogs, I added

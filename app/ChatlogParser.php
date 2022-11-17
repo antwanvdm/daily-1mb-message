@@ -1,6 +1,10 @@
 <?php namespace App;
 
+use App\ChatMessages\Messenger;
+use App\ChatMessages\ChatMessage;
+use App\ChatMessages\SpecialStatus;
 use Carbon\Carbon;
+use Exception;
 use voku\helper\UTF8;
 
 /**
@@ -19,7 +23,17 @@ class ChatlogParser
     private array $skipStrings = [
         'auto-message',
         'auto-bericht',
+        'a uto-bericht',
+        'au to-bericht',
+        'aut o-bericht',
         'auto -bericht',
+        'auto- bericht',
+        'auto-b ericht',
+        'auto-be richt',
+        'auto-ber icht',
+        'auto-beri cht',
+        'auto-beric ht',
+        'auto-berich t',
         'AutoMessage',
         'heeft zijn\/haar status gewijzigd',
         'heeft zijn/haar status gewijzigd',
@@ -34,14 +48,48 @@ class ChatlogParser
     ];
 
     /**
-     * @var array|\string[][]
+     * @var array|string[]
+     * @see https://stackoverflow.com/a/3373364
+     */
+    private array $specialCharacters = [
+        'à' => 'a',
+        'á' => 'a',
+        'â' => 'a',
+        'ã' => 'a',
+        'ä' => 'a',
+        'å' => 'a',
+        'ç' => 'c',
+        'è' => 'e',
+        'é' => 'e',
+        'ê' => 'e',
+        'ë' => 'e',
+        'ì' => 'i',
+        'í' => 'i',
+        'î' => 'i',
+        'ï' => 'i',
+        'ñ' => 'n',
+        'ò' => 'o',
+        'ó' => 'o',
+        'ô' => 'o',
+        'õ' => 'o',
+        'ö' => 'o',
+        'ø' => 'o',
+        'ù' => 'u',
+        'ú' => 'u',
+        'û' => 'u',
+        'ý' => 'y',
+        'ÿ' => 'y'
+    ];
+
+    /**
+     * @var array|string[][]
      */
     private array $namesWithColon = CHAT_NAMES_WITH_COLONS_WITH_REPLACEMENTS;
 
     /**
      * @var array|string[]
      */
-    private array $rawDataPerRow = [];
+    private array $rawDataPerRow;
 
     /**
      * @var array|ChatMessage[][]
@@ -57,6 +105,7 @@ class ChatlogParser
         $this->rawDataPerRow = explode(PHP_EOL, $this->convertChatToCleanString($fileData));
 
         $this->parseData();
+        $this->setSpecialStatus();
         $this->removeAutoMessages();
     }
 
@@ -93,7 +142,7 @@ class ChatlogParser
                 $dateString = trim(str_replace(['Start van sessie:', 'Session Start:', '|'], '', $dataItem));
                 try {
                     $currentDate = Carbon::parse($dateString)->toDateString();
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $currentDate = Carbon::parseFromLocale($dateString, 'nl')->toDateString();
                 }
                 $this->chatMessages[$currentDate] = [];
@@ -104,8 +153,10 @@ class ChatlogParser
 
             //Add time based content to the current date in the array
             if (str_starts_with($dataItem, '[')) {
-                //First replace my name if I have a : in my name...
+                //Replace the name based on config replace parameters...
                 $replaceDataItem = str_replace($this->namesWithColon[0], $this->namesWithColon[1], $dataItem);
+
+                //Strip the message into separate parts
                 preg_match('/^\[([0-9:]*)\](.*?):(.*)/', $replaceDataItem, $matches);
 
                 $chatMessage = new ChatMessage();
@@ -113,6 +164,7 @@ class ChatlogParser
                 $chatMessage->time = $matches[1] ?? 0;
                 $chatMessage->messenger = isset($matches[2]) ? $this->getMessenger($matches[2], $chatParticipants) : Messenger::Auto;
                 $chatMessage->message = isset($matches[3]) ? trim($matches[3]) : $dataItem;
+                $chatMessage->special_status = SpecialStatus::None;
                 $this->chatMessages[$currentDate][$key] = $chatMessage;
                 $lastSentenceKey = $key;
             }
@@ -156,6 +208,28 @@ class ChatlogParser
             }
         }
         return $messenger;
+    }
+
+    /**
+     * Add special status if available per chat message
+     *
+     * @return void
+     */
+    private function setSpecialStatus(): void
+    {
+        foreach ($this->chatMessages as $date => $messages) {
+            foreach ($messages as $key => $chatEntry) {
+                $text = strtr($chatEntry->message, $this->specialCharacters);
+
+                foreach (SPECIAL_STATUS_OPTIONS as $mode => $specialStrings) {
+                    foreach ($specialStrings as $specialString) {
+                        if (preg_match('/\b(' . $specialString . ')\b/i', $text)) {
+                            $this->chatMessages[$date][$key]->special_status = SpecialStatus::from($mode);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**

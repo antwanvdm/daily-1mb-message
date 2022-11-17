@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\ChatMessages;
 
 /**
  * The numbers match the data in the database.

@@ -3,6 +3,8 @@
 namespace App;
 
 use Abraham\TwitterOAuth\TwitterOAuth;
+use App\ChatMessages\ChatMessage;
+use App\ChatMessages\Messenger;
 
 /**
  * Send a formatted Twitter direct message based on the Database entries
@@ -135,7 +137,7 @@ class TwitterDMSender
         $twitterMessage = "\u{1F525} " . $this->getIntroductionString() . PHP_EOL . PHP_EOL;
         foreach ($chatMessages as $chatMessage) {
             $senderString = $this->getMessengerString($chatMessage->messenger);
-            $twitterMessage .= "Op {$chatMessage->date} om {$chatMessage->time} stuurde {$senderString}: {$chatMessage->message}" . PHP_EOL . PHP_EOL;
+            $twitterMessage .= "Op $chatMessage->date om $chatMessage->time stuurde $senderString: $chatMessage->message" . PHP_EOL . PHP_EOL;
         }
         return str_replace(array_keys($this->emojiConverter), $this->emojiConverter, $twitterMessage);
     }

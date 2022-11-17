@@ -2,6 +2,7 @@
 
 namespace App;
 
+use Exception;
 use ParagonIE\Halite\KeyFactory;
 use ParagonIE\Halite\Symmetric\Crypto as Symmetric;
 use ParagonIE\HiddenString\HiddenString;
@@ -19,7 +20,7 @@ class DataEncryption
         try {
             $encKey = KeyFactory::generateEncryptionKey();
             KeyFactory::save($encKey, ENCRYPTION_KEY_PATH);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
         }
     }
 
@@ -33,7 +34,7 @@ class DataEncryption
             $encryptionKey = KeyFactory::loadEncryptionKey(ENCRYPTION_KEY_PATH);
             $hiddenChatMessage = new HiddenString($data);
             return Symmetric::encrypt($hiddenChatMessage, $encryptionKey);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $data;
         }
     }
@@ -47,7 +48,7 @@ class DataEncryption
         try {
             $encryptionKey = KeyFactory::loadEncryptionKey(ENCRYPTION_KEY_PATH);
             return Symmetric::decrypt($data, $encryptionKey)->getString();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $data;
         }
     }

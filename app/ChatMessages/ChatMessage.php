@@ -1,6 +1,10 @@
 <?php
 
-namespace App;
+namespace App\ChatMessages;
+
+use App\Database;
+use App\DataEncryption;
+use PDO;
 
 /**
  * Representing 'Model' for messages table
@@ -13,12 +17,18 @@ class ChatMessage
     public Messenger $messenger;
 
     /**
+     * @var SpecialStatus
+     */
+    public SpecialStatus $special_status;
+
+    /**
      * @param int|null $id
      * @param int|null $account_id
      * @param string $date
      * @param string $time
      * @param int $messenger
      * @param string $message
+     * @param int $special_status
      */
     public function __construct(
         public ?int $id = null,
@@ -26,10 +36,12 @@ class ChatMessage
         public string $date = '',
         public string $time = '',
         int $messenger = 3,
-        public string $message = ''
+        public string $message = '',
+        int $special_status = 0,
     ) {
         //Required because constructor can't understand this with PDO (there is no auto enum conversation)
         $this->messenger = Messenger::from($messenger);
+        $this->special_status = SpecialStatus::from($special_status);
     }
 
     /**
@@ -38,11 +50,11 @@ class ChatMessage
      */
     public function save(int $accountId): string|bool
     {
-        $db = \App\Database::getInstance();
+        $db = Database::getInstance();
         $statement = $db->prepare(
             "INSERT INTO messages
-                        (`account_id`, `date`, `time`, `messenger`, `message`) 
-                        VALUES (:account_id, :date, :time, :messenger, :message)"
+                        (`account_id`, `date`, `time`, `messenger`, `message`, `special_status`) 
+                        VALUES (:account_id, :date, :time, :messenger, :message, :special_status)"
         );
         $statement->execute([
             ':account_id' => $accountId,
@@ -50,6 +62,7 @@ class ChatMessage
             ':time' => $this->time,
             ':messenger' => $this->messenger->value,
             ':message' => ENCRYPTION_ENABLED ? DataEncryption::encrypt($this->message) : $this->message,
+            ':special_status' => $this->special_status->value,
         ]);
         return $db->lastInsertId();
     }
@@ -64,7 +77,7 @@ class ChatMessage
         return match ((int)date('N')) {
             2 => self::getHeroesTuesdayByAccountId($accountId, $amount),
             4 => self::getThrowbackThursdayByAccountId($accountId, $amount),
-            7 => self::getContextSundayByAccountId($accountId, 10),
+            7 => self::getContextSundayByAccountId($accountId),
             default => self::getRandomByAccountId($accountId, $amount),
         };
     }
@@ -76,14 +89,14 @@ class ChatMessage
      */
     public static function getRandomByAccountId(int $accountId, int $amount = 5): array
     {
-        $db = \App\Database::getInstance();
+        $db = Database::getInstance();
         $statement = $db->prepare(
             "SELECT * FROM messages WHERE `account_id` = :account_id ORDER BY RAND() LIMIT :limit"
         );
-        $statement->bindParam('limit', $amount, \PDO::PARAM_INT);
-        $statement->bindParam('account_id', $accountId, \PDO::PARAM_INT);
+        $statement->bindParam('limit', $amount, PDO::PARAM_INT);
+        $statement->bindParam('account_id', $accountId, PDO::PARAM_INT);
         $statement->execute();
-        return $statement->fetchAll(\PDO::FETCH_FUNC, '\\App\\ChatMessage::buildFromPDO');
+        return $statement->fetchAll(PDO::FETCH_FUNC, '\\App\\ChatMessages\\ChatMessage::buildFromPDO');
     }
 
     /**
@@ -93,14 +106,14 @@ class ChatMessage
      */
     public static function getHeroesTuesdayByAccountId(int $accountId, int $amount = 5): array
     {
-        $db = \App\Database::getInstance();
+        $db = Database::getInstance();
         $statement = $db->prepare(
-            "SELECT * FROM messages WHERE `account_id` = :account_id AND (`message` LIKE '%victor%' OR `message` LIKE '%yannis%' OR `message` LIKE '% andy%' OR `message` LIKE '%daniel%') ORDER BY RAND() LIMIT :limit"
+            "SELECT * FROM messages WHERE `account_id` = :account_id AND `special_status` = 1 ORDER BY RAND() LIMIT :limit"
         );
-        $statement->bindParam('limit', $amount, \PDO::PARAM_INT);
-        $statement->bindParam('account_id', $accountId, \PDO::PARAM_INT);
+        $statement->bindParam('limit', $amount, PDO::PARAM_INT);
+        $statement->bindParam('account_id', $accountId, PDO::PARAM_INT);
         $statement->execute();
-        return $statement->fetchAll(\PDO::FETCH_FUNC, '\\App\\ChatMessage::buildFromPDO');
+        return $statement->fetchAll(PDO::FETCH_FUNC, '\\App\\ChatMessages\\ChatMessage::buildFromPDO');
     }
 
     /**
@@ -110,14 +123,14 @@ class ChatMessage
      */
     public static function getThrowbackThursdayByAccountId(int $accountId, int $amount = 5): array
     {
-        $db = \App\Database::getInstance();
+        $db = Database::getInstance();
         $statement = $db->prepare(
             "SELECT * FROM messages WHERE `account_id` = :account_id AND WEEKDAY(`date`) = 3 ORDER BY RAND() LIMIT :limit"
         );
-        $statement->bindParam('limit', $amount, \PDO::PARAM_INT);
-        $statement->bindParam('account_id', $accountId, \PDO::PARAM_INT);
+        $statement->bindParam('limit', $amount, PDO::PARAM_INT);
+        $statement->bindParam('account_id', $accountId, PDO::PARAM_INT);
         $statement->execute();
-        return $statement->fetchAll(\PDO::FETCH_FUNC, '\\App\\ChatMessage::buildFromPDO');
+        return $statement->fetchAll(PDO::FETCH_FUNC, '\\App\\ChatMessages\\ChatMessage::buildFromPDO');
     }
 
     /**
@@ -127,23 +140,23 @@ class ChatMessage
      */
     public static function getContextSundayByAccountId(int $accountId, int $amount = 10): array
     {
-        $db = \App\Database::getInstance();
+        $db = Database::getInstance();
 
         $statement = $db->prepare(
             "SELECT id FROM messages WHERE `account_id` = :account_id ORDER BY RAND() LIMIT 1"
         );
-        $statement->bindParam('account_id', $accountId, \PDO::PARAM_INT);
+        $statement->bindParam('account_id', $accountId, PDO::PARAM_INT);
         $statement->execute();
         $id = $statement->fetchColumn();
 
         $statement = $db->prepare(
             "SELECT * FROM messages WHERE `account_id` = :account_id AND id >= :id LIMIT :limit"
         );
-        $statement->bindParam('id', $id, \PDO::PARAM_INT);
-        $statement->bindParam('limit', $amount, \PDO::PARAM_INT);
-        $statement->bindParam('account_id', $accountId, \PDO::PARAM_INT);
+        $statement->bindParam('id', $id, PDO::PARAM_INT);
+        $statement->bindParam('limit', $amount, PDO::PARAM_INT);
+        $statement->bindParam('account_id', $accountId, PDO::PARAM_INT);
         $statement->execute();
-        return $statement->fetchAll(\PDO::FETCH_FUNC, '\\App\\ChatMessage::buildFromPDO');
+        return $statement->fetchAll(PDO::FETCH_FUNC, '\\App\\ChatMessages\\ChatMessage::buildFromPDO');
     }
 
     /**
@@ -153,6 +166,7 @@ class ChatMessage
      * @param string $time
      * @param int $messenger
      * @param string $message
+     * @param int $special_status
      * @return ChatMessage
      */
     public static function buildFromPDO(
@@ -161,9 +175,10 @@ class ChatMessage
         string $date,
         string $time,
         int $messenger,
-        string $message
+        string $message,
+        int $special_status
     ): ChatMessage {
         $message = ENCRYPTION_ENABLED ? DataEncryption::decrypt($message) : $message;
-        return new self($id, $account_id, $date, $time, $messenger, $message);
+        return new self($id, $account_id, $date, $time, $messenger, $message, $special_status);
     }
 }

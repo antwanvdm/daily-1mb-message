@@ -26,7 +26,7 @@ class Account
      */
     public function save(): int|bool
     {
-        $db = \App\Database::getInstance();
+        $db = Database::getInstance();
         $statement = $db->prepare(
             "INSERT INTO accounts
                         (`email`, `twitter_screen_name`, `twitter_access_token`)
@@ -46,7 +46,7 @@ class Account
      */
     public static function getTwitterAccessTokenById(int $id): array
     {
-        $db = \App\Database::getInstance();
+        $db = Database::getInstance();
         $statement = $db->prepare(
             "SELECT * FROM accounts WHERE `id` = :id"
         );
