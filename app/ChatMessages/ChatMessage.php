@@ -143,16 +143,16 @@ class ChatMessage
         $db = Database::getInstance();
 
         $statement = $db->prepare(
-            "SELECT id FROM messages WHERE `account_id` = :account_id ORDER BY RAND() LIMIT 1"
+            "SELECT TIMESTAMP(`date`, `time`) FROM messages WHERE `account_id` = :account_id ORDER BY RAND() LIMIT 1"
         );
         $statement->bindParam('account_id', $accountId, PDO::PARAM_INT);
         $statement->execute();
-        $id = $statement->fetchColumn();
+        $timestamp = $statement->fetchColumn();
 
         $statement = $db->prepare(
-            "SELECT * FROM messages WHERE `account_id` = :account_id AND `id` >= :id ORDER BY `date`, `time` LIMIT :limit"
+            "SELECT * FROM messages WHERE `account_id` = :account_id AND TIMESTAMP(`date`, `time`) >= :timestamp ORDER BY `date`, `time` LIMIT :limit"
         );
-        $statement->bindParam('id', $id, PDO::PARAM_INT);
+        $statement->bindParam('timestamp', $timestamp);
         $statement->bindParam('limit', $amount, PDO::PARAM_INT);
         $statement->bindParam('account_id', $accountId, PDO::PARAM_INT);
         $statement->execute();
