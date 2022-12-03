@@ -149,7 +149,7 @@ class TwitterDMSender
     {
         return match ((int)date('N')) {
             2 => '#heroestuesday met een random selectie van 5 berichten uit onze rijke historie aan chatberichten waar Victor, Andy, Yannis of Daniel benoemd werden:',
-            4 => '#throwbackthrusday met een random selectie van 5 berichten uit onze rijke historie aan chatberichten die plaatsvonden op de donderdag:',
+            4 => '#throwbackthursday met een random selectie van 5 berichten uit onze rijke historie aan chatberichten die plaatsvonden op de donderdag:',
             7 => '#supersunday met een speciale zondagse selectie van 10 berichten die achter elkaar verstuurd zijn:',
             default => 'Dagelijkse random selectie van 5 berichten uit onze rijke historie aan chatberichten:',
         };
