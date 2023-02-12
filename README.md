@@ -58,6 +58,10 @@ const TWITTER_CLIENT_SECRET = '';
 const TWITTER_API_TOKEN = '';
 const TWITTER_API_CALLBACK = 'http://localhost:8888/index.php';
 
+//Telegram
+const TELEGRAM_BOT_TOKEN = '';
+const TELEGRAM_CHAT_ID = '';
+
 //Application
 const ENCRYPTION_ENABLED = true;
 const ENCRYPTION_KEY_PATH = '/full/path/encryption.key';
@@ -159,6 +163,12 @@ always test the real scenario :) To make sure I can search, I've added a new
 column that will have a status based on specific search parameters. This way I 
 know a message has a 'special' status and I can filter on the specific status
 when I want to filter my results.
+
+### Challenge: Twitter API getting a paid plan
+The whol Elon Musk situation is not helping Twitter imho. Making the API paid is
+a very bad plan. I have no idea what remains free, but I didn't want the application
+to depend on it. Telegram has a very developer friendly interface, so I added this
+as second option.
 
 ## Example chats
 For those unfamiliar with the file format of the old MSN chatlogs, I added
