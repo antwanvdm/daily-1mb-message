@@ -1,15 +1,14 @@
-<?php
-
-namespace App;
+<?php namespace App\Sender;
 
 use Abraham\TwitterOAuth\TwitterOAuth;
+use App\Account;
 use App\ChatMessages\ChatMessage;
 use App\ChatMessages\Messenger;
 
 /**
  * Send a formatted Twitter direct message based on the Database entries
  */
-class TwitterDMSender
+abstract class BaseSender
 {
     /**
      * @var array|string[]
@@ -132,7 +131,7 @@ class TwitterDMSender
      * @param ChatMessage[] $chatMessages
      * @return string
      */
-    public function convertChatMessagesToTwitterMessage(array $chatMessages): string
+    public function convertChatMessagesToDM(array $chatMessages): string
     {
         $twitterMessage = "\u{1F525} " . $this->getIntroductionString() . PHP_EOL . PHP_EOL;
         foreach ($chatMessages as $chatMessage) {
@@ -165,32 +164,5 @@ class TwitterDMSender
             ($messenger === Messenger::Sender ? (SENDER_NAME . ' naar ' . PERSONAL_NAME) : 'Iemand in een groepschat');
     }
 
-    /**
-     * @param int $receiverTwitterId
-     * @param string $twitterMessage
-     * @param array $twitterAccessToken
-     * @return void
-     */
-    public function send(int $receiverTwitterId, string $twitterMessage, array $twitterAccessToken): void
-    {
-        //Let's see if we can send a DM
-        $twitter = new TwitterOAuth(TWITTER_API_KEY, TWITTER_API_SECRET, $twitterAccessToken['oauth_token'], $twitterAccessToken['oauth_token_secret']);
-        $data = [
-            'event' => [
-                'type' => 'message_create',
-                'message_create' => [
-                    'target' => [
-                        'recipient_id' => $receiverTwitterId
-                    ],
-                    'message_data' => [
-                        'text' => $twitterMessage
-                    ]
-                ]
-            ]
-        ];
-        $twitter->post('direct_messages/events/new', $data, true);
-        if ($twitter->getLastHttpCode() !== 200) {
-            // Handle error case
-        }
-    }
+    abstract public function send(int $receiverId, string $message, Account $senderAccount);
 }

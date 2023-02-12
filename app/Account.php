@@ -2,6 +2,8 @@
 
 namespace App;
 
+use PDO;
+
 /**
  * Representing 'Model' for accounts table
  */
@@ -42,17 +44,16 @@ class Account
 
     /**
      * @param int $id
-     * @return array
+     * @return Account
      */
-    public static function getTwitterAccessTokenById(int $id): array
+    public static function getById(int $id): Account
     {
         $db = Database::getInstance();
         $statement = $db->prepare(
             "SELECT * FROM accounts WHERE `id` = :id"
         );
         $statement->execute([':id' => $id]);
-        $account = $statement->fetchObject();
-        return unserialize($account->twitter_access_token);
+        return $statement->fetchAll(PDO::FETCH_FUNC, '\\App\\Account::buildFromPDO')[0];
     }
 
     /**

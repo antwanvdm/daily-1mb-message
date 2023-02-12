@@ -3,11 +3,28 @@
 require_once 'settings.php';
 require_once 'vendor/autoload.php';
 
-//Receive data from DB
-$chatMessages = \App\ChatMessages\ChatMessage::getByAccountId(SENDER_ACCOUNT_DATABASE_ID);
-$twitterAccessToken = \App\Account::getTwitterAccessTokenById(1);
+global $argv;
+$platform = $argv[1] ?? null;
+if ($platform === null) {
+    die('Choose a platform to send the message');
+}
 
-//Let's send message on Twitter!
-$twitterDMSender = new \App\TwitterDMSender();
-$twitterMessage = $twitterDMSender->convertChatMessagesToTwitterMessage($chatMessages);
-$twitterDMSender->send(SENDER_TWITTER_ID, $twitterMessage, $twitterAccessToken);
+//Receive messages from DB
+$chatMessages = \App\ChatMessages\ChatMessage::getByAccountId(SENDER_ACCOUNT_DATABASE_ID);
+
+switch ($platform) {
+    case 'twitter':
+        $twitterDM = new \App\Sender\TwitterDM();
+        $message = $twitterDM->convertChatMessagesToDM($chatMessages);
+        $twitterDM->send(SENDER_TWITTER_ID, $message, \App\Account::getById(1));
+        break;
+
+    case 'telegram':
+        $telegramBotMessage = new \App\Sender\TelegramBotMessage();
+        $message = $telegramBotMessage->convertChatMessagesToDM($chatMessages);
+        $telegramBotMessage->send(TELEGRAM_CHAT_ID, $message, \App\Account::getById(1));
+        break;
+
+    default:
+        die("Choose a supported platform please, $platform is not supported");
+}
