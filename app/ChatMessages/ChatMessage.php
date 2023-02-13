@@ -75,7 +75,8 @@ class ChatMessage
     public static function getByAccountId(int $accountId, int $amount = 5): array
     {
         return match ((int)date('N')) {
-            2 => self::getHeroesTuesdayByAccountId($accountId, $amount),
+            2 => self::getSpecialStatusByAccountId($accountId, SpecialStatus::Tuesday->value, $amount),
+            3 => self::getSpecialStatusByAccountId($accountId, SpecialStatus::Wednesday->value, $amount),
             4 => self::getThrowbackThursdayByAccountId($accountId, $amount),
             7 => self::getContextSundayByAccountId($accountId),
             default => self::getRandomByAccountId($accountId, $amount),
@@ -101,17 +102,19 @@ class ChatMessage
 
     /**
      * @param int $accountId
+     * @param int $specialStatus
      * @param int $amount
      * @return ChatMessage[]
      */
-    public static function getHeroesTuesdayByAccountId(int $accountId, int $amount = 5): array
+    public static function getSpecialStatusByAccountId(int $accountId, int $specialStatus, int $amount = 5): array
     {
         $db = Database::getInstance();
         $statement = $db->prepare(
-            "SELECT * FROM messages WHERE `account_id` = :account_id AND `special_status` = 1 ORDER BY RAND() LIMIT :limit"
+            "SELECT * FROM messages WHERE `account_id` = :account_id AND `special_status` = :special_status ORDER BY RAND() LIMIT :limit"
         );
         $statement->bindParam('limit', $amount, PDO::PARAM_INT);
         $statement->bindParam('account_id', $accountId, PDO::PARAM_INT);
+        $statement->bindParam('special_status', $specialStatus, PDO::PARAM_INT);
         $statement->execute();
         return $statement->fetchAll(PDO::FETCH_FUNC, '\\App\\ChatMessages\\ChatMessage::buildFromPDO');
     }

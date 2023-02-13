@@ -8,5 +8,6 @@ namespace App\ChatMessages;
 enum SpecialStatus: int
 {
     case None = 0;
-    case Heroes = 1;
+    case Tuesday = 1;
+    case Wednesday = 2;
 }
