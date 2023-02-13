@@ -1,6 +1,5 @@
 <?php namespace App\Sender;
 
-use Abraham\TwitterOAuth\TwitterOAuth;
 use App\Account;
 use App\ChatMessages\ChatMessage;
 use App\ChatMessages\Messenger;
@@ -165,5 +164,11 @@ abstract class BaseSender
             ($messenger === Messenger::Sender ? (SENDER_NAME . ' naar ' . PERSONAL_NAME) : 'Iemand in een groepschat');
     }
 
+    /**
+     * @param int $receiverId
+     * @param string $message
+     * @param Account $senderAccount
+     * @return mixed
+     */
     abstract public function send(int $receiverId, string $message, Account $senderAccount);
 }
