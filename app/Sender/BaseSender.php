@@ -168,7 +168,7 @@ abstract class BaseSender
      * @param int $receiverId
      * @param string $message
      * @param Account $senderAccount
-     * @return mixed
+     * @return void
      */
-    abstract public function send(int $receiverId, string $message, Account $senderAccount);
+    abstract public function send(int $receiverId, string $message, Account $senderAccount): void;
 }
