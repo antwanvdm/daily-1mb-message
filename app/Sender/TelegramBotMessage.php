@@ -23,8 +23,7 @@ class TelegramBotMessage extends BaseSender
     public function getUpdates()
     {
         try {
-            $this->telegram->useGetUpdatesWithoutDatabase();
-            $this->telegram->handleGetUpdates();
+            $this->telegram->handle();
         } catch (\Throwable $e) {
             echo $e->getMessage();
         }
