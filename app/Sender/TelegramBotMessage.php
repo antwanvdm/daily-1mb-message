@@ -1,6 +1,7 @@
 <?php namespace App\Sender;
 
 use App\Account;
+use Longman\TelegramBot\Entities\ServerResponse;
 use Longman\TelegramBot\Exception\TelegramException;
 use Longman\TelegramBot\Request;
 use Longman\TelegramBot\Telegram;
@@ -12,6 +13,44 @@ use Longman\TelegramBot\Telegram;
  */
 class TelegramBotMessage extends BaseSender
 {
+    private Telegram $telegram;
+
+    public function __construct()
+    {
+        $this->telegram = new Telegram(TELEGRAM_BOT_TOKEN, 'daily-1mb-message');
+    }
+
+    public function getUpdates()
+    {
+        try {
+            $this->telegram->useGetUpdatesWithoutDatabase();
+            $this->telegram->handleGetUpdates();
+        } catch (\Throwable $e) {
+            echo $e->getMessage();
+        }
+    }
+
+    /**
+     * @return ServerResponse
+     * @throws TelegramException
+     */
+    public function registerWebhook(): ServerResponse
+    {
+        return $this->telegram->setWebhook('https://daily-1mb-message.antwan.eu/', [
+            'allowed_updates' => ['message'],
+            'secret_token' => TELEGRAM_SECRET_HEADER
+        ]);
+    }
+
+    /**
+     * @return void
+     * @throws TelegramException
+     */
+    public function deleteWebhook(): void
+    {
+        $this->telegram->deleteWebhook();
+    }
+
     /**
      * @param int $receiverId
      * @param string $message
@@ -22,7 +61,6 @@ class TelegramBotMessage extends BaseSender
     {
         //Let's see if we can send a DM
         try {
-            $telegram = new Telegram(TELEGRAM_BOT_TOKEN, 'daily-1mb-message');
             Request::sendMessage([
                 'chat_id' => $receiverId,
                 'text' => $message,
