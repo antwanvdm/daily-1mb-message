@@ -167,8 +167,8 @@ abstract class BaseSender
     /**
      * @param int $receiverId
      * @param string $message
-     * @param Account $senderAccount
+     * @param Account|null $senderAccount
      * @return void
      */
-    abstract public function send(int $receiverId, string $message, Account $senderAccount): void;
+    abstract public function send(int $receiverId, string $message, Account $senderAccount = null): void;
 }

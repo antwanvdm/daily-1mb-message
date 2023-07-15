@@ -2,6 +2,7 @@
 
 use App\Account;
 use Longman\TelegramBot\Entities\ServerResponse;
+use Longman\TelegramBot\Entities\Update;
 use Longman\TelegramBot\Exception\TelegramException;
 use Longman\TelegramBot\Request;
 use Longman\TelegramBot\Telegram;
@@ -20,10 +21,15 @@ class TelegramBotMessage extends BaseSender
         $this->telegram = new Telegram(TELEGRAM_BOT_TOKEN, 'daily-1mb-message');
     }
 
-    public function getUpdates()
+    public function handleUpdate(): void
     {
         try {
-            $this->telegram->handle();
+            $input = Request::getInput();
+            $post = json_decode($input, true);
+            $update = new Update($post, $this->telegram->getBotUsername());
+            if ($update->getMessage()->getText() === 'test') {
+                $this->send(TELEGRAM_CHAT_ID, "Wow, je hebt een test gestuurd. Bij deze mijn ontvangstbevestiging!");
+            }
         } catch (\Throwable $e) {
             echo $e->getMessage();
         }
@@ -53,10 +59,10 @@ class TelegramBotMessage extends BaseSender
     /**
      * @param int $receiverId
      * @param string $message
-     * @param Account $senderAccount
+     * @param Account|null $senderAccount
      * @return void
      */
-    public function send(int $receiverId, string $message, Account $senderAccount): void
+    public function send(int $receiverId, string $message, Account $senderAccount = null): void
     {
         //Let's see if we can send a DM
         try {

@@ -7,4 +7,4 @@ if (!isset($_SERVER['X-Telegram-Bot-Api-Secret-Token']) || $_SERVER['X-Telegram-
 }
 
 $telegramBot = new \App\Sender\TelegramBotMessage();
-$telegramBot->getUpdates();
+$telegramBot->handleUpdate();
