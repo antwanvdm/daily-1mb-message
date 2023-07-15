@@ -11,6 +11,8 @@ use Longman\TelegramBot\Telegram;
  * Send a formatted Telegram bot message based on the Database entries
  * @link https://help.nethunt.com/en/articles/6253243-how-to-make-an-api-call-to-the-telegram-channel
  * @link https://packagist.org/packages/longman/telegram-bot
+ * @link https://api.telegram.org/bot5636325980:AAGxWrppI2dol4LDIBqRJxPKIs4srsGYfK0/getWebhookInfo
+ * @link https://core.telegram.org/bots/api#update
  */
 class TelegramBotMessage extends BaseSender
 {
