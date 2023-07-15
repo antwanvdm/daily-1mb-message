@@ -26,6 +26,8 @@ class TelegramBotMessage extends BaseSender
         try {
             $input = Request::getInput();
             $post = json_decode($input, true);
+            \App\Logger::info('Token: ' . print_r($post, true));
+
             $update = new Update($post, $this->telegram->getBotUsername());
             if ($update->getMessage()->getText() === 'test') {
                 $this->send(TELEGRAM_CHAT_ID, "Wow, je hebt een test gestuurd. Bij deze mijn ontvangstbevestiging!");
