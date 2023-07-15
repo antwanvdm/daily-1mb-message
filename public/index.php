@@ -2,9 +2,7 @@
 require_once '../settings.php';
 require_once '../vendor/autoload.php';
 
-\App\Logger::info('Token: ' . print_r($_SERVER['X-Telegram-Bot-Api-Secret-Token'], true));
-
-if (!isset($_SERVER['X-Telegram-Bot-Api-Secret-Token']) || $_SERVER['X-Telegram-Bot-Api-Secret-Token'] !== TELEGRAM_SECRET_HEADER) {
+if (!isset($_SERVER['HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN']) || $_SERVER['HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN'] !== TELEGRAM_SECRET_HEADER) {
     die("Nothing much to see here");
 }
 
