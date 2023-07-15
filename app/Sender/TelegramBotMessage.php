@@ -29,8 +29,18 @@ class TelegramBotMessage extends BaseSender
             \App\Logger::info('Token: ' . print_r($post, true));
 
             $update = new Update($post, $this->telegram->getBotUsername());
-            if ($update->getMessage()->getText() === 'test') {
-                $this->send(TELEGRAM_CHAT_ID, "Wow, je hebt een test gestuurd. Bij deze mijn ontvangstbevestiging!");
+            \App\Logger::info('Type: ' . $update->getUpdateType());
+            if ($update->getUpdateType() === 'channel_post') {
+                $text = $update->getChannelPost()->getText();
+                if (str_starts_with($text, '@Daily1MB_Bot')) {
+                    $text = str_replace('@Daily1MB_Bot ', '', $text);
+                    if ($text === 'test') {
+                        $this->send(TELEGRAM_CHAT_ID, "Wow, je hebt een test gestuurd. Bij deze mijn ontvangstbevestiging!");
+                    }
+                    if ($text === 'Victor is groots') {
+                        $this->send(TELEGRAM_CHAT_ID, "Klopt helemaal!");
+                    }
+                }
             }
         } catch (\Throwable $e) {
             echo $e->getMessage();
@@ -44,7 +54,7 @@ class TelegramBotMessage extends BaseSender
     public function registerWebhook(): ServerResponse
     {
         return $this->telegram->setWebhook('https://daily-1mb-message.antwan.eu/', [
-            'allowed_updates' => ['message'],
+            'allowed_updates' => ['channel_post'],
             'secret_token' => TELEGRAM_SECRET_HEADER
         ]);
     }
