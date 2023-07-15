@@ -4,3 +4,4 @@ vendor
 chatlogs
 settings.php
 encryption.key
+application.log
