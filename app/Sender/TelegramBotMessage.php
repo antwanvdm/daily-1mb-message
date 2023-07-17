@@ -13,7 +13,7 @@ use Longman\TelegramBot\Telegram;
  * Send a formatted Telegram bot message based on the Database entries
  * @link https://help.nethunt.com/en/articles/6253243-how-to-make-an-api-call-to-the-telegram-channel
  * @link https://packagist.org/packages/longman/telegram-bot
- * @link https://api.telegram.org/bot5636325980:AAGxWrppI2dol4LDIBqRJxPKIs4srsGYfK0/getWebhookInfo
+ * @link https://api.telegram.org/bot<token>/getWebhookInfo
  * @link https://core.telegram.org/bots/api#update
  */
 class TelegramBotMessage extends BaseSender
@@ -39,7 +39,7 @@ class TelegramBotMessage extends BaseSender
             Logger::info('Post: ' . print_r($post, true));
 
             $update = new Update($post, $this->telegram->getBotUsername());
-            if ($update->getUpdateType() === 'channel_post') {
+            if ($update->getUpdateType() === 'channel_post' && $update->getChannelPost()->getSenderChat()->getId() === TELEGRAM_CHAT_ID) {
                 $text = $update->getChannelPost()->getText();
                 if (str_starts_with($text, TELEGRAM_BOT_NAME)) {
                     $text = trim(str_replace(TELEGRAM_BOT_NAME, '', $text));
