@@ -11,10 +11,10 @@ class TwitterDM extends BaseSender
     /**
      * @param int $receiverId
      * @param string $message
-     * @param Account $senderAccount
+     * @param Account|null $senderAccount
      * @return void
      */
-    public function send(int $receiverId, string $message, Account $senderAccount): void
+    public function send(int $receiverId, string $message, Account $senderAccount = null): void
     {
         //Let's see if we can send a DM
         $twitterAccessToken = unserialize($senderAccount->twitter_access_token);

@@ -127,15 +127,35 @@ abstract class BaseSender
     ];
 
     /**
+     * @var bool
+     */
+    private bool $isContext = false;
+
+    /**
+     * @var bool
+     */
+    private bool $isContextBefore = true;
+
+    /**
+     * @param bool $before
+     * @return void
+     */
+    public function setContext(bool $before = true): void
+    {
+        $this->isContext = true;
+        $this->isContextBefore = $before;
+    }
+
+    /**
      * @param ChatMessage[] $chatMessages
      * @return string
      */
     public function convertChatMessagesToDM(array $chatMessages): string
     {
-        $twitterMessage = "\u{1F525} " . $this->getIntroductionString() . PHP_EOL . PHP_EOL;
+        $twitterMessage = $this->getIntroductionString() . PHP_EOL . PHP_EOL;
         foreach ($chatMessages as $chatMessage) {
             $senderString = $this->getMessengerString($chatMessage->messenger);
-            $twitterMessage .= "Op $chatMessage->date om $chatMessage->time stuurde $senderString: $chatMessage->message" . PHP_EOL . PHP_EOL;
+            $twitterMessage .= "Op $chatMessage->date om $chatMessage->time stuurde $senderString (#$chatMessage->id): $chatMessage->message" . PHP_EOL . PHP_EOL;
         }
         return str_replace(array_keys($this->emojiConverter), $this->emojiConverter, $twitterMessage);
     }
@@ -145,13 +165,27 @@ abstract class BaseSender
      */
     private function getIntroductionString(): string
     {
-        return match ((int)date('N')) {
+        if ($this->isContext) {
+            return "\u{1F9D0} " . $this->getContextIntroductionString();
+        }
+
+        return "\u{1F525} " . match ((int)date('N')) {
             2 => '#heroestuesday met een random selectie van 5 berichten uit onze rijke historie aan chatberichten waar Victor, Andy, Yannis of Daniel benoemd werden:',
             3 => "#wednesdaywives met een random selectie van 5 berichten uit onze rijke historie aan chatberichten waar we praten over.. ja over wie niet? \u{1F648}:",
             4 => '#throwbackthursday met een random selectie van 5 berichten uit onze rijke historie aan chatberichten die plaatsvonden op de donderdag:',
             7 => '#supersunday met een speciale zondagse selectie van 10 berichten die achter elkaar verstuurd zijn:',
             default => 'Dagelijkse random selectie van 5 berichten uit onze rijke historie aan chatberichten:',
         };
+    }
+
+    /**
+     * @return string
+     */
+    private function getContextIntroductionString(): string
+    {
+        return $this->isContextBefore
+            ? "De volgende 5 berichten waren verstuurd voor jouw geselecteerde bericht:"
+            : 'De volgende 5 berichten waren verstuurd na jouw geselecteerde bericht:';
     }
 
     /**

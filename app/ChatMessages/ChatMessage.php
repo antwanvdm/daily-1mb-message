@@ -38,7 +38,8 @@ class ChatMessage
         int $messenger = 3,
         public string $message = '',
         int $special_status = 0,
-    ) {
+    )
+    {
         //Required because constructor can't understand this with PDO (there is no auto enum conversation)
         $this->messenger = Messenger::from($messenger);
         $this->special_status = SpecialStatus::from($special_status);
@@ -65,6 +66,42 @@ class ChatMessage
             ':special_status' => $this->special_status->value,
         ]);
         return $db->lastInsertId();
+    }
+
+    /**
+     * @param int $accountId
+     * @param int $messageId
+     * @param bool $before If false, you get the messages later than the given date
+     * @param int $amount
+     * @return ChatMessage[]
+     * @throws \Exception
+     */
+    public static function getSurroundingMessages(int $accountId, int $messageId, bool $before = true, int $amount = 5): array
+    {
+        $db = Database::getInstance();
+
+        $statement = $db->prepare(
+            "SELECT TIMESTAMP(`date`, `time`) FROM messages WHERE `id` = :id AND `account_id` = :account_id LIMIT 1"
+        );
+        $statement->bindParam('id', $messageId, PDO::PARAM_INT);
+        $statement->bindParam('account_id', $accountId, PDO::PARAM_INT);
+        $statement->execute();
+        $timestamp = $statement->fetchColumn();
+
+        if ($timestamp === false) {
+            throw new \Exception('Zonder geldig ID kan ik ook geen context geven helaas..');
+        }
+
+        $statement = $db->prepare(
+            $before
+                ? "SELECT * FROM messages WHERE `account_id` = :account_id AND TIMESTAMP(`date`, `time`) < :timestamp ORDER BY `date` DESC, `time` DESC LIMIT :limit"
+                : "SELECT * FROM messages WHERE `account_id` = :account_id AND TIMESTAMP(`date`, `time`) > :timestamp ORDER BY `date`, `time` LIMIT :limit"
+        );
+        $statement->bindParam('timestamp', $timestamp);
+        $statement->bindParam('limit', $amount, PDO::PARAM_INT);
+        $statement->bindParam('account_id', $accountId, PDO::PARAM_INT);
+        $statement->execute();
+        return $statement->fetchAll(PDO::FETCH_FUNC, '\\App\\ChatMessages\\ChatMessage::buildFromPDO');
     }
 
     /**
@@ -180,7 +217,8 @@ class ChatMessage
         int $messenger,
         string $message,
         int $special_status
-    ): ChatMessage {
+    ): ChatMessage
+    {
         $message = ENCRYPTION_ENABLED ? DataEncryption::decrypt($message) : $message;
         return new self($id, $account_id, $date, $time, $messenger, $message, $special_status);
     }

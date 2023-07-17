@@ -22,7 +22,7 @@ switch ($platform) {
     case 'telegram':
         $telegramBotMessage = new \App\Sender\TelegramBotMessage();
         $message = $telegramBotMessage->convertChatMessagesToDM($chatMessages);
-        $telegramBotMessage->send(TELEGRAM_CHAT_ID, $message, \App\Account::getById(1));
+        $telegramBotMessage->send(TELEGRAM_CHAT_ID, $message);
         break;
 
     default:
