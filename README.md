@@ -61,6 +61,11 @@ const TWITTER_API_CALLBACK = 'http://localhost:8888/index.php';
 //Telegram
 const TELEGRAM_BOT_TOKEN = '';
 const TELEGRAM_CHAT_ID = '';
+const TELEGRAM_SECRET_HEADER = '';
+const TELEGRAM_BOT_USERNAME = '';
+const TELEGRAM_BOT_NAME = '';
+const TELEGRAM_WEBHOOK_URL = '';
+const TELEGRAM_PREDEFINED_ANSWERS = [];
 
 //Application
 const ENCRYPTION_ENABLED = true;
