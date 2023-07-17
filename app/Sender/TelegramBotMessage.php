@@ -39,7 +39,7 @@ class TelegramBotMessage extends BaseSender
             Logger::info('Post: ' . print_r($post, true));
 
             $update = new Update($post, $this->telegram->getBotUsername());
-            if ($update->getUpdateType() === 'channel_post' && $update->getChannelPost()->getSenderChat()->getId() === TELEGRAM_CHAT_ID) {
+            if ($update->getUpdateType() === 'channel_post') {
                 $text = $update->getChannelPost()->getText();
                 if (str_starts_with($text, TELEGRAM_BOT_NAME)) {
                     $text = trim(str_replace(TELEGRAM_BOT_NAME, '', $text));
