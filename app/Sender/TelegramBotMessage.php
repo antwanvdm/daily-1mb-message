@@ -43,7 +43,7 @@ class TelegramBotMessage extends BaseSender
                 $text = $update->getChannelPost()->getText();
                 if (str_starts_with($text, TELEGRAM_BOT_NAME)) {
                     $text = trim(str_replace(TELEGRAM_BOT_NAME, '', $text));
-                    if (in_array($text, TELEGRAM_PREDEFINED_ANSWERS)) {
+                    if (array_key_exists($text, TELEGRAM_PREDEFINED_ANSWERS)) {
                         $this->send(TELEGRAM_CHAT_ID, TELEGRAM_PREDEFINED_ANSWERS[$text]);
                     }
 
