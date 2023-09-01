@@ -58,13 +58,14 @@ class TelegramBotMessage extends BaseSender
                             $message = $this->convertChatMessagesToDM($chatMessages);
                             $this->send(TELEGRAM_CHAT_ID, $message);
                         } catch (\Throwable $e) {
-                            $this->send(TELEGRAM_CHAT_ID, $e->getMessage());
+                            $this->send(TELEGRAM_CHAT_ID, 'Er is iets fout gegaan, zorg dat je aanvraag op de juiste manier gedaan wordt.');
+                            Logger::error($e);
                         }
                     }
                 }
             }
         } catch (\Throwable $e) {
-            echo $e->getMessage();
+            Logger::error($e);
         }
     }
 
