@@ -22,6 +22,13 @@ class ChatMessage
     public SpecialStatus $special_status;
 
     /**
+     * Used to later check if we need before/after logic
+     *
+     * @var bool
+     */
+    public static bool $randomOrder = true;
+
+    /**
      * @param int|null $id
      * @param int|null $account_id
      * @param string $date
@@ -78,6 +85,7 @@ class ChatMessage
      */
     public static function getSurroundingMessages(int $accountId, int $messageId, bool $before = true, int $amount = 5): array
     {
+        self::$randomOrder = false;
         $db = Database::getInstance();
 
         $statement = $db->prepare(
@@ -180,6 +188,7 @@ class ChatMessage
      */
     public static function getContextSundayByAccountId(int $accountId, int $amount = 10): array
     {
+        self::$randomOrder = false;
         $db = Database::getInstance();
 
         $statement = $db->prepare(

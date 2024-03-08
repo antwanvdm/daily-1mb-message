@@ -120,6 +120,10 @@ class TelegramBotMessage extends BaseSender
             $inlineCallbacks[] = ['text' => "#{$id} After", 'callback_data' => "{$id}A"];
         }
 
+        if (ChatMessage::$randomOrder === false) {
+            $inlineCallbacks = [$inlineCallbacks[0], $inlineCallbacks[count($inlineCallbacks) - 1]];
+        }
+
         $inlineKeyboard = empty($inlineCallbacks) ? [] : new InlineKeyboard(...array_chunk($inlineCallbacks, 2));
 
         //Let's see if we can send a DM
