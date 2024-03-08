@@ -124,12 +124,15 @@ class TelegramBotMessage extends BaseSender
 
         //Let's see if we can send a DM
         try {
-            Request::sendMessage([
+            $messageParams = [
                 'chat_id' => $receiverId,
-                'text' => $messageData['text'],
-                'parse_mode' => 'html',
-                'reply_markup' => $inlineKeyboard
-            ]);
+                'text' => $messageData['text']
+            ];
+
+            if (!empty($inlineKeyboard)) {
+                $messageParams['reply_markup'] = $inlineKeyboard;
+            }
+            Request::sendMessage($messageParams);
         } catch (TelegramException $e) {
             Logger::error($e);
         }
