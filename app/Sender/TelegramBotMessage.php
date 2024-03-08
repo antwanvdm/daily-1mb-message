@@ -120,7 +120,7 @@ class TelegramBotMessage extends BaseSender
             $inlineCallbacks[] = ['text' => "#{$id} After", 'callback_data' => "{$id}A"];
         }
 
-        $inlineKeyboard = new InlineKeyboard(...array_chunk($inlineCallbacks, 2));
+        $inlineKeyboard = empty($inlineCallbacks) ? [] : new InlineKeyboard(...array_chunk($inlineCallbacks, 2));
 
         //Let's see if we can send a DM
         try {
