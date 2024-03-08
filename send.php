@@ -15,14 +15,14 @@ $chatMessages = \App\ChatMessages\ChatMessage::getByAccountId(SENDER_ACCOUNT_DAT
 switch ($platform) {
     case 'twitter':
         $twitterDM = new \App\Sender\TwitterDM();
-        $message = $twitterDM->convertChatMessagesToDM($chatMessages);
-        $twitterDM->send(SENDER_TWITTER_ID, $message, \App\Account::getById(1));
+        $messageData = $twitterDM->convertChatMessagesToDM($chatMessages);
+        $twitterDM->send(SENDER_TWITTER_ID, $messageData, \App\Account::getById(1));
         break;
 
     case 'telegram':
         $telegramBotMessage = new \App\Sender\TelegramBotMessage();
-        $message = $telegramBotMessage->convertChatMessagesToDM($chatMessages);
-        $telegramBotMessage->send(TELEGRAM_CHAT_ID, $message);
+        $messageData = $telegramBotMessage->convertChatMessagesToDM($chatMessages);
+        $telegramBotMessage->send(TELEGRAM_CHAT_ID, $messageData);
         break;
 
     default:

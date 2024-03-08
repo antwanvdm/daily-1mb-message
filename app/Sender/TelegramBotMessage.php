@@ -3,6 +3,7 @@
 use App\Account;
 use App\ChatMessages\ChatMessage;
 use App\Logger;
+use Longman\TelegramBot\Entities\InlineKeyboard;
 use Longman\TelegramBot\Entities\ServerResponse;
 use Longman\TelegramBot\Entities\Update;
 use Longman\TelegramBot\Exception\TelegramException;
@@ -39,12 +40,27 @@ class TelegramBotMessage extends BaseSender
             Logger::info('Post: ' . print_r($post, true));
 
             $update = new Update($post, $this->telegram->getBotUsername());
-            if ($update->getUpdateType() === 'channel_post') {
+            if ($update->getUpdateType() === 'callback_query') {
+                $data = $update->getCallbackQuery()->getData();
+                $lastChar = substr($data, -1);
+                $id = rtrim($data, $lastChar);
+                $before = $lastChar === 'B';
+
+                try {
+                    $chatMessages = ChatMessage::getSurroundingMessages(SENDER_ACCOUNT_DATABASE_ID, $id, $before);
+                    $this->setContext($before);
+                    $messageData = $this->convertChatMessagesToDM($chatMessages);
+                    $this->send(TELEGRAM_CHAT_ID, $messageData);
+                } catch (\Throwable $e) {
+                    $this->send(TELEGRAM_CHAT_ID, ['text' => 'Er is iets fout gegaan, zorg dat je aanvraag op de juiste manier gedaan wordt.', 'ids' => []]);
+                    Logger::error($e);
+                }
+            } elseif ($update->getUpdateType() === 'channel_post') {
                 $text = $update->getChannelPost()->getText();
                 if (str_starts_with($text, TELEGRAM_BOT_NAME)) {
                     $text = trim(str_replace(TELEGRAM_BOT_NAME, '', $text));
                     if (array_key_exists($text, TELEGRAM_PREDEFINED_ANSWERS)) {
-                        $this->send(TELEGRAM_CHAT_ID, TELEGRAM_PREDEFINED_ANSWERS[$text]);
+                        $this->send(TELEGRAM_CHAT_ID, ['text' => TELEGRAM_PREDEFINED_ANSWERS[$text], 'ids' => []]);
                     }
 
                     if (str_starts_with($text, '/context #')) {
@@ -55,10 +71,10 @@ class TelegramBotMessage extends BaseSender
                         try {
                             $chatMessages = ChatMessage::getSurroundingMessages(SENDER_ACCOUNT_DATABASE_ID, $id, $before);
                             $this->setContext($before);
-                            $message = $this->convertChatMessagesToDM($chatMessages);
-                            $this->send(TELEGRAM_CHAT_ID, $message);
+                            $messageData = $this->convertChatMessagesToDM($chatMessages);
+                            $this->send(TELEGRAM_CHAT_ID, $messageData);
                         } catch (\Throwable $e) {
-                            $this->send(TELEGRAM_CHAT_ID, 'Er is iets fout gegaan, zorg dat je aanvraag op de juiste manier gedaan wordt.');
+                            $this->send(TELEGRAM_CHAT_ID, ['text' => 'Er is iets fout gegaan, zorg dat je aanvraag op de juiste manier gedaan wordt.', 'ids' => []]);
                             Logger::error($e);
                         }
                     }
@@ -76,7 +92,7 @@ class TelegramBotMessage extends BaseSender
     public function registerWebhook(): ServerResponse
     {
         return $this->telegram->setWebhook(TELEGRAM_WEBHOOK_URL, [
-            'allowed_updates' => ['channel_post'],
+            'allowed_updates' => ['channel_post', 'callback_query'],
             'secret_token' => TELEGRAM_SECRET_HEADER
         ]);
     }
@@ -92,20 +108,30 @@ class TelegramBotMessage extends BaseSender
 
     /**
      * @param int $receiverId
-     * @param string $message
+     * @param array $messageData
      * @param Account|null $senderAccount
      * @return void
      */
-    public function send(int $receiverId, string $message, Account $senderAccount = null): void
+    public function send(int $receiverId, array $messageData, Account $senderAccount = null): void
     {
+        $inlineCallbacks = [];
+        foreach ($messageData['ids'] as $id) {
+            $inlineCallbacks[] = ['text' => "#{$id} Before", 'callback_data' => "{$id}B"];
+            $inlineCallbacks[] = ['text' => "#{$id} After", 'callback_data' => "{$id}A"];
+        }
+
+        $inlineKeyboard = new InlineKeyboard(...array_chunk($inlineCallbacks, 2));
+
         //Let's see if we can send a DM
         try {
             Request::sendMessage([
                 'chat_id' => $receiverId,
-                'text' => $message,
+                'text' => $messageData['text'],
+                'parse_mode' => 'html',
+                'reply_markup' => $inlineKeyboard
             ]);
         } catch (TelegramException $e) {
-            // Handle error case
+            Logger::error($e);
         }
     }
 }

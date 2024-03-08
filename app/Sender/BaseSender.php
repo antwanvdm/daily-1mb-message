@@ -148,16 +148,16 @@ abstract class BaseSender
 
     /**
      * @param ChatMessage[] $chatMessages
-     * @return string
+     * @return array
      */
-    public function convertChatMessagesToDM(array $chatMessages): string
+    public function convertChatMessagesToDM(array $chatMessages): array
     {
-        $twitterMessage = $this->getIntroductionString() . PHP_EOL . PHP_EOL;
+        $messageString = $this->getIntroductionString() . PHP_EOL . PHP_EOL;
         foreach ($chatMessages as $chatMessage) {
             $senderString = $this->getMessengerString($chatMessage->messenger);
-            $twitterMessage .= "Op $chatMessage->date om $chatMessage->time stuurde $senderString (#$chatMessage->id): $chatMessage->message" . PHP_EOL . PHP_EOL;
+            $messageString .= "Op $chatMessage->date om $chatMessage->time stuurde $senderString (#{$chatMessage->id}): $chatMessage->message" . PHP_EOL . PHP_EOL;
         }
-        return str_replace(array_keys($this->emojiConverter), $this->emojiConverter, $twitterMessage);
+        return ['text' => str_replace(array_keys($this->emojiConverter), $this->emojiConverter, $messageString), 'ids' => array_map(fn(ChatMessage $m) => $m->id, $chatMessages)];
     }
 
     /**
@@ -200,9 +200,9 @@ abstract class BaseSender
 
     /**
      * @param int $receiverId
-     * @param string $message
+     * @param array $messageData
      * @param Account|null $senderAccount
      * @return void
      */
-    abstract public function send(int $receiverId, string $message, Account $senderAccount = null): void;
+    abstract public function send(int $receiverId, array $messageData, Account $senderAccount = null): void;
 }
