@@ -109,7 +109,8 @@ class ChatMessage
         $statement->bindParam('limit', $amount, PDO::PARAM_INT);
         $statement->bindParam('account_id', $accountId, PDO::PARAM_INT);
         $statement->execute();
-        return $statement->fetchAll(PDO::FETCH_FUNC, '\\App\\ChatMessages\\ChatMessage::buildFromPDO');
+        $messages = $statement->fetchAll(PDO::FETCH_FUNC, '\\App\\ChatMessages\\ChatMessage::buildFromPDO');
+        return $before ? array_reverse($messages) : $messages;
     }
 
     /**
