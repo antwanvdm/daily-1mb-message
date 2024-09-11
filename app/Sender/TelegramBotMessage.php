@@ -141,4 +141,17 @@ class TelegramBotMessage extends BaseSender
             Logger::error($e);
         }
     }
+
+    public function sendCustomMessage(int $receiverId, string $text) :void {
+        try {
+            $messageParams = [
+                'chat_id' => $receiverId,
+                'text' => $text
+            ];
+
+            Request::sendMessage($messageParams);
+        } catch (TelegramException $e) {
+            Logger::error($e);
+        }
+    }
 }
