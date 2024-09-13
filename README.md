@@ -86,7 +86,9 @@ const CHAT_NAMES_WITH_COLONS_WITH_REPLACEMENTS = [
     ['Antwan', 'Antwan']
 ];
 const SPECIAL_STATUS_OPTIONS = [
-    1 => ['victor', 'yannis', 'andy', 'daniel']
+    1 => ['victor', 'yannis', 'andy', 'daniel'],
+    2 => ['names'],
+    3 => ['fifa', 'vakantie'],
 ];
 const SENDER_ACCOUNT_DATABASE_ID = 14;
 const PERSONAL_NAME = 'Antwan';
