@@ -124,6 +124,7 @@ class ChatMessage
             2 => self::getSpecialStatusByAccountId($accountId, SpecialStatus::Tuesday->value, $amount),
             3 => self::getSpecialStatusByAccountId($accountId, SpecialStatus::Wednesday->value, $amount),
             4 => self::getThrowbackThursdayByAccountId($accountId, $amount),
+            5 => self::getSpecialStatusByAccountId($accountId, SpecialStatus::Friday->value, $amount),
             7 => self::getContextSundayByAccountId($accountId),
             default => self::getRandomByAccountId($accountId, $amount),
         };

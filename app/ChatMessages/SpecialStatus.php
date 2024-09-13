@@ -10,4 +10,5 @@ enum SpecialStatus: int
     case None = 0;
     case Tuesday = 1;
     case Wednesday = 2;
+    case Friday = 3;
 }
