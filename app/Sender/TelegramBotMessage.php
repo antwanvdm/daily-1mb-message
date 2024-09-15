@@ -94,17 +94,21 @@ class TelegramBotMessage extends BaseSender
     /**
      * @param $question
      * @return null
-     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function askVectorStore($question)
     {
-        $client = new \GuzzleHttp\Client();
-        $response = $client->request('GET', VECTOR_STORE_CHAT_URL . $question, [
-            'headers' => [
-                'Accept' => 'application/json',
-            ]
-        ]);
-        return json_decode($response->getBody()->getContents())?->answer;
+        try {
+            $client = new \GuzzleHttp\Client();
+            $response = $client->request('GET', VECTOR_STORE_CHAT_URL . $question, [
+                'headers' => [
+                    'Accept' => 'application/json',
+                ]
+            ]);
+            return json_decode($response->getBody()->getContents())->answer;
+        } catch (\Throwable $e) {
+            Logger::error($e);
+            return 'Er ging even iets mis met het stellen van de vraag, probeer het later opnieuw!';
+        }
     }
 
     /**
