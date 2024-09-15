@@ -108,6 +108,8 @@ const SENDER_ACCOUNT_DATABASE_ID = 14;
 const PERSONAL_NAME = 'Antwan';
 const SENDER_NAME = 'Victor';
 const SENDER_TWITTER_ID = 0;
+
+const VECTOR_STORE_CHAT_URL = 'http://localhost:3008/ask?question=';
 ```
 
 The `chat/.env` looks like this:
