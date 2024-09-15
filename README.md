@@ -31,6 +31,9 @@ a local database. On a daily basis I have a cron task configured that sends
 It sends them via a private Telegram chatbot to both of us, so we can enjoy
 some random conversations from two decades ago.
 
+As an extra bonus feature we can ask the chatbot our own questions. This way
+we can explore every detail of the past.
+
 ## Technical implementation
 
 The implementation is done via PHP and a simple MySQL database. It uses the
@@ -39,13 +42,24 @@ te Twitter API was used, but after Musk closed the free API, I switched to a
 Telegram bot. The Twitter connection will still work if someone normal would
 buy and reincarnate Twitter in the future.
 
-Packages used:
+The extra chat feature is build with LangchainJS connected to OpenAI webservice.
+Is used a FaissStore to store all the chat messages. Express is used for a very
+minimal internal endpoint which PHP can consume within the Telegram handler.
+
+PHP Packages used:
 
 - ~~[abraham/twitteroauth](https://github.com/abraham/twitteroauth)~~
 - [nesbot/carbon](https://github.com/briannesbitt/Carbon)
 - [voku/portable-utf8](https://github.com/voku/portable-utf8)
 - [paragonie/halite](https://github.com/paragonie/halite)
 - [longman/telegram-bot](https://github.com/php-telegram-bot/core)
+
+Most relevant NPM packages used:
+
+- [langchain](https://github.com/langchain-ai/langchainjs)
+- [faiss-node](https://github.com/ewfian/faiss-node)
+- [express](https://github.com/expressjs/express)
+- [dotenv](https://github.com/motdotla/dotenv)
 
 The `settings.php` file looks like this. I implemented all the personal
 information concerning messages & names in this file as well:
@@ -94,6 +108,32 @@ const SENDER_ACCOUNT_DATABASE_ID = 14;
 const PERSONAL_NAME = 'Antwan';
 const SENDER_NAME = 'Victor';
 const SENDER_TWITTER_ID = 0;
+```
+
+The `chat/.env` looks like this:
+
+```dotenv
+DB_HOST=127.0.0.1
+DB_USER=root
+DB_PASS=
+DB_NAME=database
+
+EXPRESS_PORT=3008
+DEBUG=true
+OPENAI_API_KEY=
+
+SENDER_EMAIL=some@email.random
+```
+
+The contents of the chat/default_prompts.json in an array of strings to
+configure how the chatbot should behave.
+
+```json
+[
+  "De gesprekken zijn gevoerd op MSN Messenger tussen 2003 en 2008.",
+  "De gesprekken zijn georganiseerd in sessies, met informatie over de deelnemers, het jaar, de maand en de dag.",
+  "Geef antwoorden uitsluitend gebaseerd op de gegeven context. Verzamel geen extra informatie buiten de context."
+]
 ```
 
 The raw SQL of the database structure looks like this:
@@ -198,6 +238,10 @@ The whole Elon Musk situation is not helping Twitter imho. Making the API paid i
 a very bad plan. I have no idea what remains free, but I didn't want the application
 to depend on it. Telegram has a very developer friendly interface, so I added this
 as second option.
+
+### Challenge: Add feature to ask open questions
+
+TODO
 
 ## Example chats
 

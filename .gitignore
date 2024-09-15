@@ -1,7 +1,16 @@
+#General
 .idea
 .vscode
+
+#Main application
 vendor
 chatlogs
 settings.php
 encryption.key
 application.log
+
+#Node chat
+.env
+chat/store
+node_modules
+chat/system-prompts.json

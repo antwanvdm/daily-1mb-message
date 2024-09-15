@@ -78,11 +78,33 @@ class TelegramBotMessage extends BaseSender
                             Logger::error($e);
                         }
                     }
+
+                    if (str_starts_with($text, '/question')) {
+                        $question = str_replace('/question ', '', $text);
+                        $answer = $this->askVectorStore($question);
+                        $this->sendCustomMessage(TELEGRAM_CHAT_ID, $answer);
+                    }
                 }
             }
         } catch (\Throwable $e) {
             Logger::error($e);
         }
+    }
+
+    /**
+     * @param $question
+     * @return null
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function askVectorStore($question)
+    {
+        $client = new \GuzzleHttp\Client();
+        $response = $client->request('GET', VECTOR_STORE_CHAT_URL . $question, [
+            'headers' => [
+                'Accept' => 'application/json',
+            ]
+        ]);
+        return json_decode($response->getBody()->getContents())?->answer;
     }
 
     /**
@@ -142,7 +164,13 @@ class TelegramBotMessage extends BaseSender
         }
     }
 
-    public function sendCustomMessage(int $receiverId, string $text) :void {
+    /**
+     * @param int $receiverId
+     * @param string $text
+     * @return void
+     */
+    public function sendCustomMessage(int $receiverId, string $text): void
+    {
         try {
             $messageParams = [
                 'chat_id' => $receiverId,
