@@ -30,4 +30,4 @@ app.get('/ask', async (req, res) => {
   res.json({answer: result});
 });
 
-app.listen(port, () => console.log(`Daily 1MB VectorStore listening on port ${port}`));
+app.listen(port, process.env.EXPRESS_HOSTNAME, () => console.log(`Daily 1MB VectorStore listening on port ${port}`));
