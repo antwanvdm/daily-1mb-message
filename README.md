@@ -32,7 +32,7 @@ It sends them via a private Telegram chatbot to both of us, so we can enjoy
 some random conversations from two decades ago.
 
 As an extra bonus feature we can ask the chatbot our own questions. This way
-we can explore every detail of the past.
+we can explore every detail of the past via customised questions.
 
 ## Technical implementation
 
@@ -244,7 +244,14 @@ as second option.
 
 ### Challenge: Add feature to ask open questions
 
-TODO
+After more than two years of running the application successful, the wish of getting
+more context and information became stronger. With the rise of AI and tools to use
+your own data combined with LLMs, implementing this made sense. I recently built 
+another application with LangchainJS and a Faiss VectorStore so this toolset made 
+perfect sense. I combined it with a mysql package to convert the database rows to
+documents that could be stored in the VectorStore. Via a simple express route
+questions can be asked from the main PHP application that is connected to the
+Telegram bot.
 
 ## Example chats
 
