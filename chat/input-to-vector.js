@@ -62,7 +62,7 @@ async function storeVectorForAccount(accountId, email) {
     }
 
     // Append the message to the current month's messages
-    const whoSaid = messenger === 0 ? 'Antwan' : (messenger === 1 ? 'Sander' : 'Iemand in een groepschat')
+    const whoSaid = messenger === 0 ? process.env.PERSONAL_NAME : (messenger === 1 ? process.env.SENDER_NAME : 'Iemand in een groepschat')
     monthMessages += `${whoSaid} zei op ${fullDateTime}: ${message}` + '\n';
     currentMonth = month;
   }
@@ -80,7 +80,7 @@ async function storeVectorForAccount(accountId, email) {
 
   // Convert all documents to embeddings and store them in Faiss vector store
   const vectorStore = await FaissStore.fromDocuments(allDocs, embeddings);
-  const directory = `store/${email}`;
+  const directory = `store/${process.env.AI_PROVIDER}/${email}`;
   await vectorStore.save(directory);
   console.log('VectorStore successfully created with monthly messages!');
 }

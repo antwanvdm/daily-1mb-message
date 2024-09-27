@@ -1,23 +1,50 @@
 import 'dotenv/config';
 import systemPrompts from './system-prompts.json' with { type: 'json' };
-import { FaissStore } from "@langchain/community/vectorstores/faiss";
+import { FaissStore } from '@langchain/community/vectorstores/faiss';
 import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai';
-import { HumanMessage, AIMessage } from "@langchain/core/messages";
-import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+import { ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
+import { HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
+import { HumanMessage, AIMessage } from '@langchain/core/messages';
+import { createStuffDocumentsChain } from 'langchain/chains/combine_documents';
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,
-} from "@langchain/core/prompts";
+} from '@langchain/core/prompts';
 
-const chatModel = new ChatOpenAI({
-  temperature: 0,
-  model: "gpt-4o",
-  apiKey: process.env.OPENAI_API_KEY
-});
+const chatModel = process.env.AI_PROVIDER === 'openai' ?
+  new ChatOpenAI({
+    temperature: 0,
+    model: 'gpt-4o',
+    apiKey: process.env.OPENAI_API_KEY
+  }) :
+  new ChatGoogleGenerativeAI({
+    temperature: 0.8,
+    model: 'gemini-1.5-flash-latest',
+    apiKey: process.env.GOOGLE_AI_API_KEY,
+    safetySettings: [
+      {
+        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      }, {
+        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      }, {
+        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      }, {
+        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      }
+    ]
+  });
 
-const embeddings = new OpenAIEmbeddings({
-  apiKey: process.env.OPENAI_API_KEY
-});
+const embeddings = process.env.AI_PROVIDER === 'openai' ?
+  new OpenAIEmbeddings({
+    apiKey: process.env.OPENAI_API_KEY
+  }) :
+  new GoogleGenerativeAIEmbeddings({
+    apiKey: process.env.GOOGLE_AI_API_KEY,
+  });
 
 const SYSTEM_TEMPLATE = `Answer the user's questions always in Dutch, based on the below context. 
 {systemPrompts}
@@ -28,8 +55,8 @@ const SYSTEM_TEMPLATE = `Answer the user's questions always in Dutch, based on t
 `;
 
 const questionAnsweringPrompt = ChatPromptTemplate.fromMessages([
-  ["system", SYSTEM_TEMPLATE],
-  new MessagesPlaceholder("messages"),
+  ['system', SYSTEM_TEMPLATE],
+  new MessagesPlaceholder('messages'),
 ]);
 
 const documentChain = await createStuffDocumentsChain({
@@ -42,7 +69,7 @@ const documentChain = await createStuffDocumentsChain({
  * @returns {FaissStore}
  */
 async function getVectorStore(email) {
-  const directory = `store/${email}`;
+  const directory = `store/${process.env.AI_PROVIDER}/${email}`;
   return await FaissStore.load(directory, embeddings);
 }
 
@@ -63,6 +90,7 @@ async function askQuestion(question, email) {
   });
 
   const docs = await retriever.invoke(question);
+  console.log(docs);
   return await documentChain.invoke({
     messages: [new HumanMessage(question)],
     context: docs,
