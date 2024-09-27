@@ -90,7 +90,6 @@ async function askQuestion(question, email) {
   });
 
   const docs = await retriever.invoke(question);
-  console.log(docs);
   return await documentChain.invoke({
     messages: [new HumanMessage(question)],
     context: docs,
