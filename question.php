@@ -9,5 +9,4 @@ if ($question === null) {
 }
 
 $telegramBot = new \App\Sender\TelegramBotMessage();
-$text = $telegramBot->askVectorStore($question);
-$telegramBot->sendCustomMessage(TELEGRAM_CHAT_ID, $text);
+echo $telegramBot->askVectorStore($question);
