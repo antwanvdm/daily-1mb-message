@@ -3,6 +3,12 @@
 use App\Account;
 use App\ChatMessages\ChatMessage;
 use App\Logger;
+use Google\Cloud\TextToSpeech\V1\AudioConfig;
+use Google\Cloud\TextToSpeech\V1\AudioEncoding;
+use Google\Cloud\TextToSpeech\V1\Client\TextToSpeechClient;
+use Google\Cloud\TextToSpeech\V1\SynthesisInput;
+use Google\Cloud\TextToSpeech\V1\SynthesizeSpeechRequest;
+use Google\Cloud\TextToSpeech\V1\VoiceSelectionParams;
 use Longman\TelegramBot\Entities\InlineKeyboard;
 use Longman\TelegramBot\Entities\ServerResponse;
 use Longman\TelegramBot\Entities\Update;
@@ -93,9 +99,9 @@ class TelegramBotMessage extends BaseSender
 
     /**
      * @param $question
-     * @return null
+     * @return string|null
      */
-    public function askVectorStore($question)
+    public function askVectorStore($question): ?string
     {
         try {
             $client = new \GuzzleHttp\Client();
@@ -176,12 +182,42 @@ class TelegramBotMessage extends BaseSender
     public function sendCustomMessage(int $receiverId, string $text): void
     {
         try {
-            $messageParams = [
-                'chat_id' => $receiverId,
-                'text' => $text
-            ];
+            if (strlen($text) > 600) {
+                $messageParams = [
+                    'chat_id' => $receiverId,
+                    'text' => $text
+                ];
+                Request::sendMessage($messageParams);
+            } else {
+                putenv('GOOGLE_APPLICATION_CREDENTIALS=google-keys.json');
+                $client = new TextToSpeechClient();
 
-            Request::sendMessage($messageParams);
+                // Set up the SynthesisInput object
+                $synthesisInput = new SynthesisInput();
+                $synthesisInput->setText($text);
+
+                $voice = new VoiceSelectionParams();
+                $voice->setLanguageCode('nl-NL');
+                $voice->setName('nl-NL-Wavenet-B');
+
+                $audioConfig = new AudioConfig();
+                $audioConfig->setAudioEncoding(AudioEncoding::OGG_OPUS);
+
+                $request = new SynthesizeSpeechRequest();
+                $request->setInput($synthesisInput);
+                $request->setVoice($voice);
+                $request->setAudioConfig($audioConfig);
+
+                $response = $client->synthesizeSpeech($request);
+
+                file_put_contents('_message.ogg', $response->getAudioContent());
+
+                $messageParams = [
+                    'chat_id' => $receiverId,
+                    'voice' => '_message.ogg'
+                ];
+                Request::sendVoice($messageParams);
+            }
         } catch (TelegramException $e) {
             Logger::error($e);
         }

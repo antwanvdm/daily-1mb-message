@@ -8,6 +8,8 @@ chatlogs
 settings.php
 encryption.key
 application.log
+google-keys.json
+_message.ogg
 
 #Node chat
 .env

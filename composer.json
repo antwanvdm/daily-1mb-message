@@ -13,7 +13,8 @@
     "abraham/twitteroauth": "^4.0",
     "paragonie/halite": "^5.1",
     "longman/telegram-bot": "^0.81.0",
-    "guzzlehttp/guzzle": "^7.7"
+    "guzzlehttp/guzzle": "^7.7",
+    "google/cloud-text-to-speech": "^1.10"
   },
   "autoload": {
     "psr-4": {
