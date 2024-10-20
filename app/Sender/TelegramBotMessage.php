@@ -217,7 +217,7 @@ class TelegramBotMessage extends BaseSender
                     'chat_id' => $receiverId,
                     'voice' => '_message.ogg'
                 ];
-//                Request::sendVoice($messageParams);
+                Request::sendVoice($messageParams);
             }
         } catch (TelegramException $e) {
             Logger::error($e);
