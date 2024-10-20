@@ -26,6 +26,7 @@ use Longman\TelegramBot\Telegram;
 class TelegramBotMessage extends BaseSender
 {
     private Telegram $telegram;
+    const VECTOR_ERROR_MESSAGE = 'Er ging even iets mis met het stellen van de vraag, probeer het later opnieuw!';
 
     public function __construct()
     {
@@ -113,7 +114,7 @@ class TelegramBotMessage extends BaseSender
             return json_decode($response->getBody()->getContents())->answer;
         } catch (\Throwable $e) {
             Logger::error($e);
-            return 'Er ging even iets mis met het stellen van de vraag, probeer het later opnieuw!';
+            return self::VECTOR_ERROR_MESSAGE;
         }
     }
 
@@ -182,7 +183,7 @@ class TelegramBotMessage extends BaseSender
     public function sendCustomMessage(int $receiverId, string $text): void
     {
         try {
-            if (strlen($text) > 600) {
+            if (strlen($text) > 600 || $text === self::VECTOR_ERROR_MESSAGE) {
                 $messageParams = [
                     'chat_id' => $receiverId,
                     'text' => $text
@@ -211,11 +212,12 @@ class TelegramBotMessage extends BaseSender
 
                 $response = $client->synthesizeSpeech($request);
 
-                file_put_contents('_message.ogg', $response->getAudioContent());
+                $messageFileLocation = __DIR__ . '/../../_message.ogg';
+                file_put_contents($messageFileLocation, $response->getAudioContent());
 
                 $messageParams = [
                     'chat_id' => $receiverId,
-                    'voice' => '_message.ogg'
+                    'voice' => $messageFileLocation
                 ];
                 Request::sendVoice($messageParams);
             }
