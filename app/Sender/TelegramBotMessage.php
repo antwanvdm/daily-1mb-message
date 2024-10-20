@@ -189,7 +189,8 @@ class TelegramBotMessage extends BaseSender
                 ];
                 Request::sendMessage($messageParams);
             } else {
-                putenv('GOOGLE_APPLICATION_CREDENTIALS=google-keys.json');
+                $credentialsPath = __DIR__ . '/../../google-keys.json';
+                putenv('GOOGLE_APPLICATION_CREDENTIALS=' . $credentialsPath);
                 $client = new TextToSpeechClient();
 
                 // Set up the SynthesisInput object
@@ -216,7 +217,7 @@ class TelegramBotMessage extends BaseSender
                     'chat_id' => $receiverId,
                     'voice' => '_message.ogg'
                 ];
-                Request::sendVoice($messageParams);
+//                Request::sendVoice($messageParams);
             }
         } catch (TelegramException $e) {
             Logger::error($e);
