@@ -3,6 +3,7 @@
 use App\Account;
 use App\ChatMessages\ChatMessage;
 use App\Logger;
+use Google\ApiCore\ApiException;
 use Google\Cloud\TextToSpeech\V1\AudioConfig;
 use Google\Cloud\TextToSpeech\V1\AudioEncoding;
 use Google\Cloud\TextToSpeech\V1\Client\TextToSpeechClient;
@@ -91,6 +92,12 @@ class TelegramBotMessage extends BaseSender
                         $answer = $this->askVectorStore($question);
                         $this->sendCustomMessage(TELEGRAM_CHAT_ID, $answer);
                     }
+
+                    if (str_starts_with($text, '/voice')) {
+                        $question = str_replace('/voice ', '', $text);
+                        $answer = $this->askVectorStore($question);
+                        $this->sendCustomMessage(TELEGRAM_CHAT_ID, $answer, 'voice');
+                    }
                 }
             }
         } catch (\Throwable $e) {
@@ -178,12 +185,14 @@ class TelegramBotMessage extends BaseSender
     /**
      * @param int $receiverId
      * @param string $text
+     * @param string $type
      * @return void
+     * @throws ApiException
      */
-    public function sendCustomMessage(int $receiverId, string $text): void
+    public function sendCustomMessage(int $receiverId, string $text, string $type = 'text'): void
     {
         try {
-            if (strlen($text) > 600 || $text === self::VECTOR_ERROR_MESSAGE) {
+            if ($type === 'text' || $text === self::VECTOR_ERROR_MESSAGE) {
                 $messageParams = [
                     'chat_id' => $receiverId,
                     'text' => $text
