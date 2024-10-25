@@ -1,5 +1,30 @@
 # Daily 1MB Message
 
+- [Introduction](#introduction)
+- [Technical implementation](#technical-implementation)
+  - [Composer packages](#composer-packages)
+  - [NPM packages](#npm-packages)
+  - [Required .gitignore files](#required-gitignore-files)
+    - [settings.php](#settingsphp)
+    - [chat/.env](#chatenv)
+    - [chat/default_prompts.json](#chatdefault_promptsjson)
+  - [Database export](#database-export)
+- [Technical challenges](#technical-challenges)
+  - [Charsets](#challenge-charsets)
+  - [Parsing the date](#challenge-parsing-the-date)
+  - [Parsing the messenger](#challenge-parsing-the-messenger)
+  - [Separating group chats](#challenge-separating-group-chats)
+  - [Converting emojis](#challenge-converting-emojis)
+  - [Securing the data](#challenge-securing-the-data)
+  - [Retrieving records based on search](#challenge-retrieving-records-based-on-search)
+  - [Twitter API getting a paid plan](#challenge-twitter-api-getting-a-paid-plan)
+  - [Ask open questions](#challenge-ask-open-questions)
+  - [Reply chat questions with voice](#challenge-reply-chat-questions-with-voice)
+- [Example chatlog files](#example-chatlog-files)
+
+
+## Introduction
+
 Once upon a time people used MSN Messenger as their daily chat tool.
 There was no facebook, instagram, whatsapp, telegram, etc. You logged
 in on your home computer and you were connected to your friends.
@@ -47,7 +72,7 @@ Is used a FaissStore to store all the chat messages. Express is used for a very
 minimal internal endpoint which PHP can consume within the Telegram handler. With
 `/question` the bot answers in text, with `/voice` the bot answers with audio.
 
-PHP Packages used:
+### Composer Packages
 
 - ~~[abraham/twitteroauth](https://github.com/abraham/twitteroauth)~~
 - [nesbot/carbon](https://github.com/briannesbitt/Carbon)
@@ -56,12 +81,16 @@ PHP Packages used:
 - [longman/telegram-bot](https://github.com/php-telegram-bot/core)
 - [google/cloud-text-to-speech](https://github.com/googleapis/google-cloud-php-text-to-speech)
 
-Most relevant NPM packages used:
+### NPM packages
 
 - [langchain](https://github.com/langchain-ai/langchainjs)
 - [faiss-node](https://github.com/ewfian/faiss-node)
 - [express](https://github.com/expressjs/express)
 - [dotenv](https://github.com/motdotla/dotenv)
+
+### Required .gitignore files
+
+#### settings.php
 
 The `settings.php` file looks like this. I implemented all the personal
 information concerning messages & names in this file as well:
@@ -114,6 +143,8 @@ const SENDER_TWITTER_ID = 0;
 const VECTOR_STORE_CHAT_URL = 'http://localhost:3008/ask?question=';
 ```
 
+#### chat/.env
+
 The `chat/.env` looks like this:
 
 ```dotenv
@@ -130,7 +161,9 @@ OPENAI_API_KEY=
 SENDER_EMAIL=some@email.random
 ```
 
-The contents of the chat/default_prompts.json in an array of strings to
+#### chat/default_prompts.json
+
+The contents of the `chat/default_prompts.json` in an array of strings to
 configure how the chatbot should behave.
 
 ```json
@@ -140,6 +173,8 @@ configure how the chatbot should behave.
   "Geef antwoorden uitsluitend gebaseerd op de gegeven context. Verzamel geen extra informatie buiten de context."
 ]
 ```
+
+### Database export
 
 The raw SQL of the database structure looks like this:
 
@@ -169,6 +204,8 @@ CREATE TABLE `messages`
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 ```
+
+## Technical challenges
 
 ### Challenge: Charsets
 
@@ -237,19 +274,19 @@ column that will have a status based on specific search parameters. This way I
 know a message has a 'special' status and I can filter on the specific status
 when I want to filter my results.
 
-### Challenge: Twitter API getting a paid plan -> Telegram
+### Challenge: Twitter API getting a paid plan
 
-The whole Elon Musk situation is not helping Twitter imho. Making the API paid is
-a very bad plan. I have no idea what remains free, but I didn't want the application
-to depend on it. Telegram has a very developer friendly interface, so I added this
-as second option.
+The whole Elon Musk situation destroyed Twitter (X) imho. Making the API paid was
+one of the very bad moves. I have no idea if it ever will return, but I won't rely
+on it while he is in charge. Telegram has a very developer friendly interface, so
+I added this as new option for the daily messages.
 
-The biggest challenge was reading up on the Telegram documentation. There were more
+The biggest challenge was reading up on the Telegram documentation. They have more
 than 1 type of API and once I finally the right one, it still took some time to
 configure the bot in a private channel and catch the input from the chat in my own
 code via hooks.
 
-### Challenge: Add feature to ask open questions
+### Challenge: Ask open questions
 
 After more than two years of running the application successful, the wish of getting
 more context and information became stronger. With the rise of AI and tools to use
@@ -269,7 +306,7 @@ I hoped I could directly send the audio response from the Google API to the Tele
 endpoint, but I first needed to store the file locally. To prevent overload of audio
 files I stored 1 default file which will always contain the last chat response.
 
-## Example chats
+## Example chatlog files
 
 For those unfamiliar with the file format of the old MSN chatlogs, I added
 an example. It probably illustrates why I had some challenges. :-)
