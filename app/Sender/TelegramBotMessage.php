@@ -188,6 +188,7 @@ class TelegramBotMessage extends BaseSender
      * @param string $type
      * @return void
      * @throws ApiException
+     * @link https://cloud.google.com/text-to-speech/docs/voices
      */
     public function sendCustomMessage(int $receiverId, string $text, string $type = 'text'): void
     {
@@ -207,9 +208,10 @@ class TelegramBotMessage extends BaseSender
                 $synthesisInput = new SynthesisInput();
                 $synthesisInput->setText($text);
 
+                $voices = ['nl-NL-Standard-A', 'nl-NL-Standard-B', 'nl-NL-Standard-C', 'nl-NL-Standard-D', 'nl-NL-Standard-E', 'nl-NL-Standard-F', 'nl-NL-Standard-G', 'nl-NL-Wavenet-A', 'nl-NL-Wavenet-B', 'nl-NL-Wavenet-C', 'nl-NL-Wavenet-D', 'nl-NL-Wavenet-E'];
                 $voice = new VoiceSelectionParams();
                 $voice->setLanguageCode('nl-NL');
-                $voice->setName('nl-NL-Wavenet-B');
+                $voice->setName($voices[array_rand($voices)]);
 
                 $audioConfig = new AudioConfig();
                 $audioConfig->setAudioEncoding(AudioEncoding::OGG_OPUS);

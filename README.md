@@ -44,7 +44,8 @@ buy and reincarnate Twitter in the future.
 
 The extra chat feature is build with LangchainJS connected to OpenAI webservice.
 Is used a FaissStore to store all the chat messages. Express is used for a very
-minimal internal endpoint which PHP can consume within the Telegram handler.
+minimal internal endpoint which PHP can consume within the Telegram handler. With
+`/question` the bot answers in text, with `/voice` the bot answers with audio.
 
 PHP Packages used:
 
@@ -53,6 +54,7 @@ PHP Packages used:
 - [voku/portable-utf8](https://github.com/voku/portable-utf8)
 - [paragonie/halite](https://github.com/paragonie/halite)
 - [longman/telegram-bot](https://github.com/php-telegram-bot/core)
+- [google/cloud-text-to-speech](https://github.com/googleapis/google-cloud-php-text-to-speech)
 
 Most relevant NPM packages used:
 
@@ -235,12 +237,17 @@ column that will have a status based on specific search parameters. This way I
 know a message has a 'special' status and I can filter on the specific status
 when I want to filter my results.
 
-### Challenge: Twitter API getting a paid plan
+### Challenge: Twitter API getting a paid plan -> Telegram
 
 The whole Elon Musk situation is not helping Twitter imho. Making the API paid is
 a very bad plan. I have no idea what remains free, but I didn't want the application
 to depend on it. Telegram has a very developer friendly interface, so I added this
 as second option.
+
+The biggest challenge was reading up on the Telegram documentation. There were more
+than 1 type of API and once I finally the right one, it still took some time to
+configure the bot in a private channel and catch the input from the chat in my own
+code via hooks.
 
 ### Challenge: Add feature to ask open questions
 
@@ -252,6 +259,15 @@ perfect sense. I combined it with a mysql package to convert the database rows t
 documents that could be stored in the VectorStore. Via a simple express route
 questions can be asked from the main PHP application that is connected to the
 Telegram bot.
+
+### Challenge: Reply chat questions with voice
+
+Instead of only receiving chat answers in text, we also would like to receive voice
+responses. I ended up creating two different bot commands to choose between voice 
+and text. The biggest challenge was finding an efficient way to handle the audio input.
+I hoped I could directly send the audio response from the Google API to the Telegram
+endpoint, but I first needed to store the file locally. To prevent overload of audio
+files I stored 1 default file which will always contain the last chat response.
 
 ## Example chats
 
