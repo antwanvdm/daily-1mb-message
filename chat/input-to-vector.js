@@ -83,4 +83,5 @@ async function storeVectorForAccount(accountId, email) {
   const directory = `store/${process.env.AI_PROVIDER}/${email}`;
   await vectorStore.save(directory);
   console.log('VectorStore successfully created with monthly messages!');
+  process.exit();
 }

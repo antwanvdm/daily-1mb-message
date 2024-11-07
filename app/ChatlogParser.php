@@ -145,7 +145,7 @@ class ChatlogParser
                 } catch (Exception $e) {
                     $currentDate = Carbon::parseFromLocale($dateString, 'nl')->toDateString();
                 }
-                $this->chatMessages[$currentDate] = [];
+                $this->chatMessages[$currentDate] = $this->chatMessages[$currentDate] ?? [];
                 $chatParticipants = -1;
             } elseif (str_starts_with($dataItem, '|')) {
                 $chatParticipants++;

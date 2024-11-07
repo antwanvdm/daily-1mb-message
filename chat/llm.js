@@ -84,7 +84,7 @@ async function askQuestion(question, email) {
   const match = question.match(/\b(2003|2004|2005|2006|2007|2008)\b/);
 
   const retriever = vectorStore.asRetriever({
-    k: 10,
+    k: 15,
     similarityThreshold: 0.6,
     filter: match ? (doc) => doc.metadata.month.includes(match[0]) : null // NOT WORKING...
   });

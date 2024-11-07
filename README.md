@@ -52,7 +52,7 @@ felt like an achievement, and reason to celebrate, to both of us.
 
 To honor this memory I wrote this application that converts the chats into
 a local database. On a daily basis I have a cron task configured that sends
-5 random messages, out of the 87k+ chat messages we shared back in the days.
+5 random messages, out of the 200k+ chat messages we shared back in the days.
 It sends them via a private Telegram chatbot to both of us, so we can enjoy
 some random conversations from two decades ago.
 
