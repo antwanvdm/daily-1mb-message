@@ -93,7 +93,7 @@ async function askQuestion(question, email) {
   return await documentChain.invoke({
     messages: [new HumanMessage(question)],
     context: docs,
-    systemPrompts: systemPrompts
+    systemPrompts: question.includes('#creative') ? systemPrompts.creative : systemPrompts.default
   });
 }
 
