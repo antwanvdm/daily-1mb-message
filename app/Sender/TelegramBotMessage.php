@@ -113,7 +113,7 @@ class TelegramBotMessage extends BaseSender
     {
         try {
             $client = new \GuzzleHttp\Client();
-            $response = $client->request('GET', VECTOR_STORE_CHAT_URL . $question, [
+            $response = $client->request('GET', VECTOR_STORE_CHAT_URL . urlencode($question), [
                 'headers' => [
                     'Accept' => 'application/json',
                 ]
