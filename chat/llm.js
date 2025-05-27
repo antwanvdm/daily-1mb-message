@@ -90,10 +90,29 @@ async function askQuestion(question, email) {
   });
 
   const docs = await retriever.invoke(question);
+
+  const isCreative = question.includes('#creative');
+  const systemPrompt = isCreative ? systemPrompts.creative : systemPrompts.default;
+  if (isCreative) {
+    question = question.replace('#creative', '');
+  }
+
+  const personalName = process.env.PERSONAL_NAME;
+  const senderName = process.env.SENDER_NAME;
+  const isPersonalName = question.includes(`#${personalName.toLowerCase()}`);
+  const isSenderName = question.includes(`#${senderName.toLowerCase()}`);
+
+  if (isPersonalName || isSenderName) {
+    const identity = isPersonalName ? personalName : senderName;
+    systemPrompt.splice(3, 2);
+    systemPrompt.push(systemPrompts.identity.replace(/NAME/g, identity));
+    question = question.replace(`#${identity.toLowerCase()}`, '');
+  }
+
   return await documentChain.invoke({
     messages: [new HumanMessage(question)],
     context: docs,
-    systemPrompts: question.includes('#creative') ? systemPrompts.creative : systemPrompts.default
+    systemPrompts: systemPrompt
   });
 }
 
