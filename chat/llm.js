@@ -1,15 +1,12 @@
 import 'dotenv/config';
 import systemPrompts from './system-prompts.json' with { type: 'json' };
 import { FaissStore } from '@langchain/community/vectorstores/faiss';
-import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai';
+import { ChatOpenAI, DallEAPIWrapper, OpenAIEmbeddings } from '@langchain/openai';
 import { ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
 import { HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
-import { HumanMessage, AIMessage } from '@langchain/core/messages';
+import { HumanMessage } from '@langchain/core/messages';
 import { createStuffDocumentsChain } from 'langchain/chains/combine_documents';
-import {
-  ChatPromptTemplate,
-  MessagesPlaceholder,
-} from '@langchain/core/prompts';
+import { ChatPromptTemplate, MessagesPlaceholder, PromptTemplate, } from '@langchain/core/prompts';
 
 const chatModel = process.env.AI_PROVIDER === 'openai' ?
   new ChatOpenAI({
@@ -37,6 +34,22 @@ const chatModel = process.env.AI_PROVIDER === 'openai' ?
       }
     ]
   });
+
+const dallEAPIWrapper = new DallEAPIWrapper({
+  n: 1,
+  modelName: 'dall-e-3',
+  openAIApiKey: process.env.OPENAI_API_KEY,
+  size: '1792x1024',
+  dallEResponseFormat: 'b64_json'
+});
+
+const imagePrompt = PromptTemplate.fromTemplate(`
+{answer}
+
+Maak een beeld dat dit uitdrukt, in de stijl van een realistische schildering of cinematische fotografie.
+Het beeld moet volledig vrij zijn van tekst, woorden, titels, opschriften, tekstballonnen, ondertitels, letters en logo's.
+Geen geschreven elementen in de afbeelding.
+`);
 
 const embeddings = process.env.AI_PROVIDER === 'openai' ?
   new OpenAIEmbeddings({
@@ -116,5 +129,12 @@ async function askQuestion(question, email) {
   });
 }
 
+/**
+ * @param answer
+ */
+async function generateImage(answer) {
+  const dallEPrompt = await imagePrompt.format({answer});
+  return await dallEAPIWrapper.invoke(dallEPrompt);
+}
 
-export { chatModel, embeddings, askQuestion };
+export { chatModel, embeddings, askQuestion, generateImage };

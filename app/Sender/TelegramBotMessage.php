@@ -2,6 +2,7 @@
 
 use App\Account;
 use App\ChatMessages\ChatMessage;
+use App\DTO\VectorResponse;
 use App\Logger;
 use Google\ApiCore\ApiException;
 use Google\Cloud\TextToSpeech\V1\AudioConfig;
@@ -89,14 +90,14 @@ class TelegramBotMessage extends BaseSender
 
                     if (str_starts_with($text, '/question')) {
                         $question = str_replace('/question ', '', $text);
-                        $answer = $this->askVectorStore($question);
-                        $this->sendCustomMessage(TELEGRAM_CHAT_ID, $answer);
+                        $chatResponse = $this->askVectorStore($question);
+                        $this->sendCustomMessage(TELEGRAM_CHAT_ID, $chatResponse);
                     }
 
                     if (str_starts_with($text, '/voice')) {
                         $question = str_replace('/voice ', '', $text);
-                        $answer = $this->askVectorStore($question);
-                        $this->sendCustomMessage(TELEGRAM_CHAT_ID, $answer, 'voice');
+                        $chatResponse = $this->askVectorStore($question);
+                        $this->sendCustomMessage(TELEGRAM_CHAT_ID, $chatResponse, 'voice');
                     }
                 }
             }
@@ -107,9 +108,9 @@ class TelegramBotMessage extends BaseSender
 
     /**
      * @param $question
-     * @return string|null
+     * @return VectorResponse
      */
-    public function askVectorStore($question): ?string
+    public function askVectorStore($question): VectorResponse
     {
         try {
             $client = new \GuzzleHttp\Client();
@@ -118,10 +119,10 @@ class TelegramBotMessage extends BaseSender
                     'Accept' => 'application/json',
                 ]
             ]);
-            return json_decode($response->getBody()->getContents())->answer;
+            return VectorResponse::fromArray(json_decode($response->getBody()->getContents(), true));
         } catch (\Throwable $e) {
             Logger::error($e);
-            return self::VECTOR_ERROR_MESSAGE;
+            return VectorResponse::fromArray(['answer' => self::VECTOR_ERROR_MESSAGE, 'image' => null]);
         }
     }
 
@@ -152,7 +153,7 @@ class TelegramBotMessage extends BaseSender
      * @param Account|null $senderAccount
      * @return void
      */
-    public function send(int $receiverId, array $messageData, Account $senderAccount = null): void
+    public function send(int $receiverId, array $messageData, ?Account $senderAccount = null): void
     {
         $inlineCallbacks = [];
         foreach ($messageData['ids'] as $id) {
@@ -184,21 +185,35 @@ class TelegramBotMessage extends BaseSender
 
     /**
      * @param int $receiverId
-     * @param string $text
+     * @param VectorResponse $chatResponse
      * @param string $type
      * @return void
      * @throws ApiException
      * @link https://cloud.google.com/text-to-speech/docs/voices
      */
-    public function sendCustomMessage(int $receiverId, string $text, string $type = 'text'): void
+    public function sendCustomMessage(int $receiverId, VectorResponse $chatResponse, string $type = 'text'): void
     {
         try {
-            if ($type === 'text' || $text === self::VECTOR_ERROR_MESSAGE) {
-                $messageParams = [
-                    'chat_id' => $receiverId,
-                    'text' => $text
-                ];
-                Request::sendMessage($messageParams);
+            if ($type === 'text' || $chatResponse->answer === self::VECTOR_ERROR_MESSAGE) {
+                if ($chatResponse->image !== null) {
+                    //Store temporary and move on
+                    $imageData = base64_decode($chatResponse->image);
+                    $tmpFile = tempnam(sys_get_temp_dir(), 'tgimg_') . '.png';
+                    file_put_contents($tmpFile, $imageData);
+
+                    $messageParams = [
+                        'chat_id' => $receiverId,
+                        'photo' => $tmpFile,
+                        'caption' => $chatResponse->answer,
+                    ];
+                    Request::sendPhoto($messageParams);
+                } else {
+                    $messageParams = [
+                        'chat_id' => $receiverId,
+                        'text' => $chatResponse->answer
+                    ];
+                    Request::sendMessage($messageParams);
+                }
             } else {
                 $credentialsPath = __DIR__ . '/../../google-keys.json';
                 putenv('GOOGLE_APPLICATION_CREDENTIALS=' . $credentialsPath);
@@ -206,7 +221,7 @@ class TelegramBotMessage extends BaseSender
 
                 // Set up the SynthesisInput object
                 $synthesisInput = new SynthesisInput();
-                $synthesisInput->setText($text);
+                $synthesisInput->setText($chatResponse->answer);
 
                 $voices = ['nl-NL-Standard-A', 'nl-NL-Standard-B', 'nl-NL-Standard-C', 'nl-NL-Standard-D', 'nl-NL-Standard-E', 'nl-NL-Standard-F', 'nl-NL-Standard-G', 'nl-NL-Wavenet-A', 'nl-NL-Wavenet-B', 'nl-NL-Wavenet-C', 'nl-NL-Wavenet-D', 'nl-NL-Wavenet-E'];
                 $voice = new VoiceSelectionParams();

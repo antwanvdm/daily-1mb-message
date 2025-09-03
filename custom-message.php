@@ -9,4 +9,5 @@ if ($message === null) {
 }
 
 $telegramBot = new \App\Sender\TelegramBotMessage();
-$telegramBot->sendCustomMessage(TELEGRAM_CHAT_ID, $message);
+$chatResponse = \App\DTO\VectorResponse::fromArray(['answer' => $message, 'image' => null]);
+$telegramBot->sendCustomMessage(TELEGRAM_CHAT_ID, $chatResponse);

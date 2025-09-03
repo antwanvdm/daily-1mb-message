@@ -8,13 +8,13 @@
   ],
   "require": {
     "ext-pdo": "*",
-    "nesbot/carbon": "^2.62",
-    "voku/portable-utf8": "^6.0",
+    "nesbot/carbon": "^3.10.2",
+    "voku/portable-utf8": "dev-master",
     "abraham/twitteroauth": "^4.0",
     "paragonie/halite": "^5.1",
-    "longman/telegram-bot": "^0.81.0",
-    "guzzlehttp/guzzle": "^7.7",
-    "google/cloud-text-to-speech": "^1.10"
+    "longman/telegram-bot": "0.83.1",
+    "guzzlehttp/guzzle": "^7.10.0",
+    "google/cloud-text-to-speech": "^v2.2.2"
   },
   "autoload": {
     "psr-4": {

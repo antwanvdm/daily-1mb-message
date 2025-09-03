@@ -1,5 +1,5 @@
 import express from 'express';
-import { askQuestion } from './llm.js';
+import { askQuestion, generateImage } from './llm.js';
 
 const app = express();
 const port = process.env.EXPRESS_PORT;
@@ -26,8 +26,12 @@ app.get('/ask', async (req, res) => {
     return res.json({error: 'No parameter question given'});
   }
 
-  const result = await askQuestion(req.query.question, process.env.SENDER_EMAIL);
-  res.json({answer: result});
+  const requestsImage = req.query.question.includes('#image');
+  const question = req.query.question.replace('#image', '');
+  const answer = await askQuestion(question, process.env.SENDER_EMAIL);
+  const image = requestsImage ? await generateImage(answer) : null;
+
+  res.json({answer: answer, image: image});
 });
 
 app.listen(port, process.env.EXPRESS_HOSTNAME, () => console.log(`Daily 1MB VectorStore listening on port ${port}`));
