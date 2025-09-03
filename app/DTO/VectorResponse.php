@@ -4,11 +4,11 @@ class VectorResponse implements Base
 {
     /**
      * @param string $answer
-     * @param string $image
+     * @param string|null $image
      */
     private function __construct(
         public string $answer,
-        public string $image,
+        public ?string $image,
     ) {
     }
 
