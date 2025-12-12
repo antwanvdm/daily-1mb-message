@@ -105,7 +105,7 @@ async function askQuestion(question, email) {
   const docs = await retriever.invoke(question);
 
   const isCreative = question.includes('#creative');
-  const systemPrompt = isCreative ? systemPrompts.creative : systemPrompts.default;
+  const systemPrompt = isCreative ? JSON.parse(JSON.stringify(systemPrompts.creative)) : JSON.parse(JSON.stringify(systemPrompts.default));
   if (isCreative) {
     question = question.replace('#creative', '');
   }
@@ -118,9 +118,11 @@ async function askQuestion(question, email) {
   if (isPersonalName || isSenderName) {
     const identity = isPersonalName ? personalName : senderName;
     systemPrompt.splice(3, 2);
+    systemPrompt.shift();
     systemPrompt.unshift(systemPrompts.identity.replace(/NAME/g, identity));
     question = question.replace(`#${identity.toLowerCase()}`, '');
   }
+  console.log(systemPrompt);
 
   return await documentChain.invoke({
     messages: [new HumanMessage(question)],
