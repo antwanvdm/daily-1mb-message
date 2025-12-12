@@ -118,7 +118,7 @@ async function askQuestion(question, email) {
   if (isPersonalName || isSenderName) {
     const identity = isPersonalName ? personalName : senderName;
     systemPrompt.splice(3, 2);
-    systemPrompt.push(systemPrompts.identity.replace(/NAME/g, identity));
+    systemPrompt.unshift(systemPrompts.identity.replace(/NAME/g, identity));
     question = question.replace(`#${identity.toLowerCase()}`, '');
   }
 

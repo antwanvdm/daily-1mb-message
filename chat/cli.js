@@ -1,5 +1,5 @@
 import * as readline from 'readline';
-import { askQuestion } from './llm.js';
+import { askQuestion, generateImage } from './llm.js';
 
 //Initial question and CLI interface to debug input/output
 console.log('Stel een vraag');
@@ -9,6 +9,9 @@ const rl = readline.createInterface({
 });
 
 rl.on('line', async (input) => {
-  const result = await askQuestion(input, process.env.SENDER_EMAIL);
-  console.log(result);
+  const requestsImage = input.includes('#image');
+  const question = input.replace('#image', '');
+  const answer = await askQuestion(question, process.env.SENDER_EMAIL);
+  const image = requestsImage ? await generateImage(answer) : null;
+  console.log(answer);
 });
