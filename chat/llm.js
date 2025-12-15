@@ -90,9 +90,10 @@ async function getVectorStore(email) {
  * Give option to be verbose from the outside
  *
  * @param question
+ * @param questionAskedBy
  * @param email
  */
-async function askQuestion(question, email) {
+async function askQuestion(question, questionAskedBy, email) {
   const vectorStore = await getVectorStore(email);
   const match = question.match(/\b(2003|2004|2005|2006|2007|2008)\b/);
 
@@ -117,9 +118,10 @@ async function askQuestion(question, email) {
 
   if (isPersonalName || isSenderName) {
     const identity = isPersonalName ? personalName : senderName;
+    const otherPerson = isPersonalName ? senderName : personalName;
     systemPrompt.splice(3, 2);
     systemPrompt.shift();
-    systemPrompt.unshift(systemPrompts.identity.replace(/NAME/g, identity));
+    systemPrompt.push(systemPrompts.identity.replace(/NAME/g, identity).replace(/SENDER/g, questionAskedBy).replace(/OTHER/g, otherPerson));
     question = question.replace(`#${identity.toLowerCase()}`, '');
   }
   console.log(systemPrompt);

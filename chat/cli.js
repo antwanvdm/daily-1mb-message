@@ -11,7 +11,7 @@ const rl = readline.createInterface({
 rl.on('line', async (input) => {
   const requestsImage = input.includes('#image');
   const question = input.replace('#image', '');
-  const answer = await askQuestion(question, process.env.SENDER_EMAIL);
+  const answer = await askQuestion(question, process.env.PERSONAL_NAME, process.env.SENDER_EMAIL);
   const image = requestsImage ? await generateImage(answer) : null;
   console.log(answer);
 });

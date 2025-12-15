@@ -88,15 +88,17 @@ class TelegramBotMessage extends BaseSender
                         }
                     }
 
+                    $questionSender = str_contains($update->getChannelPost()->getAuthorSignature(), PERSONAL_NAME) ? 1 : 2;
+
                     if (str_starts_with($text, '/question')) {
                         $question = str_replace('/question ', '', $text);
-                        $chatResponse = $this->askVectorStore($question);
+                        $chatResponse = $this->askVectorStore($question, $questionSender);
                         $this->sendCustomMessage(TELEGRAM_CHAT_ID, $chatResponse);
                     }
 
                     if (str_starts_with($text, '/voice')) {
                         $question = str_replace('/voice ', '', $text);
-                        $chatResponse = $this->askVectorStore($question);
+                        $chatResponse = $this->askVectorStore($question, $questionSender);
                         $this->sendCustomMessage(TELEGRAM_CHAT_ID, $chatResponse, 'voice');
                     }
                 }
@@ -107,14 +109,15 @@ class TelegramBotMessage extends BaseSender
     }
 
     /**
-     * @param $question
+     * @param string $question
+     * @param int $sender
      * @return VectorResponse
      */
-    public function askVectorStore($question): VectorResponse
+    public function askVectorStore(string $question, int $sender = 1): VectorResponse
     {
         try {
             $client = new \GuzzleHttp\Client();
-            $response = $client->request('GET', VECTOR_STORE_CHAT_URL . urlencode($question), [
+            $response = $client->request('GET', VECTOR_STORE_CHAT_URL . urlencode($question) . '&sender=' . $sender, [
                 'headers' => [
                     'Accept' => 'application/json',
                 ]

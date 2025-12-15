@@ -21,14 +21,15 @@ app.use((req, res, next) => {
 });
 
 app.get('/ask', async (req, res) => {
-  if (typeof req.query.question === 'undefined') {
+  if (typeof req.query.question === 'undefined' || typeof req.query.sender === 'undefined') {
     res.status(400);
-    return res.json({error: 'No parameter question given'});
+    return res.json({error: 'Required parameters are missing'});
   }
 
   const requestsImage = req.query.question.includes('#image');
   const question = req.query.question.replace('#image', '');
-  const answer = await askQuestion(question, process.env.SENDER_EMAIL);
+  const sender = parseInt(req.query.sender) === 1 ? process.env.PERSONAL_NAME : process.env.SENDER_NAME;
+  const answer = await askQuestion(question, sender, process.env.SENDER_EMAIL);
   const image = requestsImage ? await generateImage(answer) : null;
 
   res.json({answer: answer, image: image});
