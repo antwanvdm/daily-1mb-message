@@ -138,7 +138,11 @@ async function askQuestion(question, questionAskedBy, email) {
  */
 async function generateImage(answer) {
   const dallEPrompt = await imagePrompt.format({answer});
-  return await dallEAPIWrapper.invoke(dallEPrompt);
+  try {
+    return await dallEAPIWrapper.invoke(dallEPrompt);
+  } catch (e) {
+    return null;
+  }
 }
 
 export { chatModel, embeddings, askQuestion, generateImage };
