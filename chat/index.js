@@ -1,5 +1,5 @@
 import express from 'express';
-import { askQuestion, generateImage } from './llm.js';
+import { askQuestion, analyzeImage, generateImage } from './llm.js';
 
 const app = express();
 const port = process.env.EXPRESS_PORT;
@@ -29,10 +29,22 @@ app.get('/ask', async (req, res) => {
   const requestsImage = req.query.question.includes('#image');
   const question = req.query.question.replace('#image', '');
   const sender = parseInt(req.query.sender) === 1 ? process.env.PERSONAL_NAME : process.env.SENDER_NAME;
-  const answer = await askQuestion(question, sender, process.env.SENDER_EMAIL);
+  const conversationKey = `telegram:private:${process.env.TELEGRAM_PRIVATE_CHAT_ID || 'default'}`;
+  const answer = await askQuestion(question, sender, process.env.SENDER_EMAIL, conversationKey);
   const image = requestsImage ? await generateImage(answer) : null;
 
   res.json({answer: answer, image: image});
+});
+
+app.post('/analyze-image', async (req, res) => {
+  const {image, question = ''} = req.body;
+  if (!image || !image.data || !image.mimeType) {
+    return res.status(400).json({error: 'Image data and mimeType are required'});
+  }
+  const sender = parseInt(req.query.sender ?? req.body.sender) === 1 ? process.env.PERSONAL_NAME : process.env.SENDER_NAME;
+  const conversationKey = req.body.conversationKey || `telegram:private:${process.env.TELEGRAM_PRIVATE_CHAT_ID || 'default'}`;
+  const answer = await analyzeImage(image, question, sender, process.env.SENDER_EMAIL, conversationKey);
+  res.json({answer, image: null});
 });
 
 app.listen(port, process.env.EXPRESS_HOSTNAME, () => console.log(`Daily 1MB VectorStore listening on port ${port}`));

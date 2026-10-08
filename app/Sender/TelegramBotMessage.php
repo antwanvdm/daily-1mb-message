@@ -65,7 +65,20 @@ class TelegramBotMessage extends BaseSender
                     Logger::error($e);
                 }
             } elseif ($update->getUpdateType() === 'channel_post') {
-                $text = $update->getChannelPost()->getText();
+                $channelPost = $update->getChannelPost();
+                $text = $channelPost->getText() ?? $channelPost->getCaption() ?? '';
+                if ($channelPost->getPhoto()) {
+                    $questionSender = str_contains($channelPost->getAuthorSignature(), PERSONAL_NAME) ? 1 : 2;
+                    $question = $text;
+                    $photos = $channelPost->getPhoto();
+                    $photo = end($photos);
+                    $file = Request::getFile(['file_id' => $photo->getFileId()])->getResult();
+                    $imageUrl = 'https://api.telegram.org/file/bot' . TELEGRAM_BOT_TOKEN . '/' . $file->getFilePath();
+                    $imageData = base64_encode((string) file_get_contents($imageUrl));
+                    $chatResponse = $this->analyzeVectorImage($imageData, 'image/jpeg', $question, $questionSender);
+                    $this->sendCustomMessage(TELEGRAM_CHAT_ID, $chatResponse);
+                    return;
+                }
                 if (str_starts_with($text, TELEGRAM_BOT_NAME)) {
                     $text = trim(str_replace(TELEGRAM_BOT_NAME, '', $text));
                     if (array_key_exists($text, TELEGRAM_PREDEFINED_ANSWERS)) {
@@ -117,10 +130,25 @@ class TelegramBotMessage extends BaseSender
     {
         try {
             $client = new \GuzzleHttp\Client();
-            $response = $client->request('GET', VECTOR_STORE_CHAT_URL . urlencode($question) . '&sender=' . $sender, [
+            $response = $client->request('GET', VECTOR_STORE_CHAT_URL . urlencode($question) . '&sender=' . $sender . '&conversationKey=' . urlencode('telegram:private:' . TELEGRAM_CHAT_ID), [
                 'headers' => [
                     'Accept' => 'application/json',
                 ]
+            ]);
+            return VectorResponse::fromArray(json_decode($response->getBody()->getContents(), true));
+        } catch (\Throwable $e) {
+            Logger::error($e);
+            return VectorResponse::fromArray(['answer' => self::VECTOR_ERROR_MESSAGE, 'image' => null]);
+        }
+    }
+
+    public function analyzeVectorImage(string $data, string $mimeType, string $question, int $sender = 1): VectorResponse
+    {
+        try {
+            $client = new \GuzzleHttp\Client();
+            $response = $client->request('POST', str_replace('/ask?question=', '/analyze-image', VECTOR_STORE_CHAT_URL), [
+                'headers' => ['Accept' => 'application/json', 'Content-Type' => 'application/json'],
+                'json' => ['image' => ['data' => $data, 'mimeType' => $mimeType], 'question' => $question, 'sender' => $sender],
             ]);
             return VectorResponse::fromArray(json_decode($response->getBody()->getContents(), true));
         } catch (\Throwable $e) {

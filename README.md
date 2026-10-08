@@ -67,10 +67,13 @@ te Twitter API was used, but after Musk closed the free API, I switched to a
 Telegram bot. The Twitter connection will still work if someone normal would
 buy and reincarnate Twitter in the future.
 
-The extra chat feature is build with LangchainJS connected to OpenAI webservice.
-Is used a FaissStore to store all the chat messages. Express is used for a very
-minimal internal endpoint which PHP can consume within the Telegram handler. With
-`/question` the bot answers in text, with `/voice` the bot answers with audio.
+The extra chat feature is built with current LangChainJS packages connected to
+OpenAI. A FaissStore stores the chat messages. Express exposes a minimal internal
+endpoint consumed by the Telegram handler. With `/question` the bot answers in
+text, with `/voice` it answers with audio. Telegram private-channel conversations
+are kept in memory for five minutes. A photo post is sent to `/analyze-image` for
+OpenAI vision analysis. Add `#creative` for the creative prompt and `#image` to
+request an image generated with OpenAI `gpt-image-1`.
 
 ### Composer Packages
 
