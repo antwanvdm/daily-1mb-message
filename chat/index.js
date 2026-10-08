@@ -5,7 +5,9 @@ const app = express();
 const port = process.env.EXPRESS_PORT;
 const debug = process.env.DEBUG === 'true';
 
-app.use(express.json());
+app.use(express.json({
+  limit: process.env.MAX_IMAGE_REQUEST_SIZE || '30mb',
+}));
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');

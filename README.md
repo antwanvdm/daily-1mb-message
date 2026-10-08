@@ -160,6 +160,8 @@ EXPRESS_PORT=3008
 EXPRESS_HOSTNAME=0.0.0.0
 DEBUG=true
 OPENAI_API_KEY=
+# Maximum JSON request size for Telegram image analysis.
+MAX_IMAGE_REQUEST_SIZE=30mb
 
 SENDER_EMAIL=some@email.random
 ```
