@@ -75,6 +75,15 @@ are kept in memory for five minutes. A photo post is sent to `/analyze-image` fo
 OpenAI vision analysis. Add `#creative` for the creative prompt and `#image` to
 request an image generated with OpenAI `gpt-image-1`.
 
+The channel command `/game` opens an inline-button game menu with year, who,
+score, and stop actions. Game rounds use messages from the existing archive,
+wait for answers from both configured players, and never reveal the correct
+answer. The minimal score and active-round state is stored atomically in
+`game-state.json` in the project root. Player attribution uses configured names and
+Telegram channel `author_signature`; no Telegram user registration or IDs are
+stored. Configure `PERSONAL_NAME` and `SENDER_NAME` in `settings.php`. A stop
+cancels the round without awarding points.
+
 ### Composer Packages
 
 - ~~[abraham/twitteroauth](https://github.com/abraham/twitteroauth)~~

@@ -50,7 +50,12 @@ class TelegramBotMessage extends BaseSender
 
             $update = new Update($post, $this->telegram->getBotUsername());
             if ($update->getUpdateType() === 'callback_query') {
-                $data = $update->getCallbackQuery()->getData();
+                $callbackQuery = $update->getCallbackQuery();
+                $data = $callbackQuery->getData();
+                $game = new \App\Game();
+                if ($game->handleCallback($data, $callbackQuery->getFrom(), $callbackQuery->getMessage())) {
+                    return;
+                }
                 $lastChar = substr($data, -1);
                 $id = rtrim($data, $lastChar);
                 $before = $lastChar === 'B';
@@ -103,6 +108,10 @@ class TelegramBotMessage extends BaseSender
 
                     $questionSender = str_contains($update->getChannelPost()->getAuthorSignature(), PERSONAL_NAME) ? 1 : 2;
 
+                    if (str_starts_with($text, '/game')) {
+                        $this->sendGameMenu();
+                    }
+
                     if (str_starts_with($text, '/question')) {
                         $question = str_replace('/question ', '', $text);
                         $chatResponse = $this->askVectorStore($question, $questionSender);
@@ -126,6 +135,16 @@ class TelegramBotMessage extends BaseSender
      * @param int $sender
      * @return VectorResponse
      */
+    private function sendGameMenu(): void
+    {
+        $menu = (new \App\Game())->menu();
+        Request::sendMessage([
+            'chat_id' => TELEGRAM_CHAT_ID,
+            'text' => $menu['text'],
+            'reply_markup' => $menu['reply_markup'],
+        ]);
+    }
+
     public function askVectorStore(string $question, int $sender = 1): VectorResponse
     {
         try {

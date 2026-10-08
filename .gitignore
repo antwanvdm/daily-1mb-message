@@ -6,6 +6,7 @@
 vendor
 chatlogs
 settings.php
+game-state.json
 encryption.key
 application.log
 google-keys.json
