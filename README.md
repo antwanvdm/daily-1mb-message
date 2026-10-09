@@ -68,12 +68,15 @@ Telegram bot. The Twitter connection will still work if someone normal would
 buy and reincarnate Twitter in the future.
 
 The extra chat feature is built with current LangChainJS packages connected to
-OpenAI. A FaissStore stores the chat messages. Express exposes a minimal internal
-endpoint consumed by the Telegram handler. With `/question` the bot answers in
-text, with `/voice` it answers with audio. Telegram private-channel conversations
-are kept in memory for five minutes. A photo post is sent to `/analyze-image` for
-OpenAI vision analysis. Add `#creative` for the creative prompt and `#image` to
-request an image generated with OpenAI `gpt-image-1`.
+OpenAI. A versioned FaissStore stores individual messages and overlapping 12-message
+conversation windows with date, participant, and message-ID metadata. Express exposes
+a minimal internal endpoint consumed by the Telegram handler. The v2 rebuild embeds
+bounded batches with exponential retry/backoff for OpenAI rate limits, checkpoints
+progress in a temporary directory, and replaces the active index only after a successful
+build. With `/question` the bot answers in text, with `/voice` it answers with audio.
+Telegram private-channel conversations are kept in memory for five minutes. A photo post
+is sent to `/analyze-image` for OpenAI vision analysis. Add `#creative` for the creative
+prompt and `#image` to request an image generated with OpenAI `gpt-image-1`.
 
 The channel command `/game` opens an inline-button game menu with when, who,
 score, and stop actions. Game rounds use messages from the existing archive,

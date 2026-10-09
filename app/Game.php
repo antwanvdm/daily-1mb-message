@@ -42,6 +42,11 @@ final class Game
 
         $state = $this->readState();
         $action = substr($data, 5);
+        Logger::info('Game callback: ' . json_encode([
+            'data' => $data,
+            'action' => $action,
+            'activeRound' => is_array($state['active']) ? ($state['active']['id'] ?? null) : null,
+        ], JSON_UNESCAPED_UNICODE));
         if ($action === 'score') {
             $this->send($this->scoreText($state), $this->menu()['reply_markup']);
             return true;
@@ -74,8 +79,13 @@ final class Game
         if (str_starts_with($action, 'answer:')) {
             [$roundId, $answerValue] = array_pad(explode(':', substr($action, 7), 2), 2, null);
             $answerIndex = filter_var($answerValue, FILTER_VALIDATE_INT);
+            Logger::info('Game answer callback: ' . json_encode([
+                'roundId' => $roundId,
+                'answerIndex' => $answerIndex,
+            ], JSON_UNESCAPED_UNICODE));
             $active = $state['active'];
             if (!is_array($active) || !hash_equals((string) ($active['id'] ?? ''), (string) $roundId)) {
+                Logger::info('Game answer rejected: no matching active round.');
                 $this->send('Er is geen actieve ronde.');
                 return true;
             }

@@ -13,7 +13,10 @@ const chatModel = new ChatOpenAI({
 });
 
 const conversationHistory = new Map();
+const vectorStoreCache = new Map();
 const HISTORY_TTL_MS = 5 * 60 * 1000;
+const RETRIEVAL_CANDIDATES = 30;
+const MAX_CONTEXT_DOCUMENTS = 12;
 const MAX_HISTORY_MESSAGES = 20;
 
 function getConversationHistory(conversationKey) {
@@ -51,7 +54,8 @@ Geen geschreven elementen in de afbeelding.
 `);
 
 const embeddings = new OpenAIEmbeddings({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY,
+  batchSize: 32,
 });
 
 const SYSTEM_TEMPLATE = `Answer the user's questions always in Dutch, based on the below context. 
@@ -77,8 +81,32 @@ const documentChain = await createStuffDocumentsChain({
  * @returns {FaissStore}
  */
 async function getVectorStore(email) {
-  const directory = `store/${process.env.AI_PROVIDER}/${email}`;
-  return await FaissStore.load(directory, embeddings);
+  if (!vectorStoreCache.has(email)) {
+    const directory = `store/${process.env.AI_PROVIDER}/${email}/v2`;
+    const loadingStore = FaissStore.load(directory, embeddings).catch((error) => {
+      vectorStoreCache.delete(email);
+      throw error;
+    });
+    vectorStoreCache.set(email, loadingStore);
+  }
+  return vectorStoreCache.get(email);
+}
+
+function deduplicateDocuments(documents) {
+  const seenContent = new Set();
+  const uniqueDocuments = [];
+
+  for (const document of documents) {
+    const content = document.pageContent.trim();
+    if (seenContent.has(content)) {
+      continue;
+    }
+
+    seenContent.add(content);
+    uniqueDocuments.push(document);
+  }
+
+  return uniqueDocuments;
 }
 
 /**
@@ -89,27 +117,40 @@ async function getVectorStore(email) {
  * @param email
  */
 async function askQuestion(question, questionAskedBy, email, conversationKey = questionAskedBy) {
-  const vectorStore = await getVectorStore(email);
-  const match = question.match(/\b(2003|2004|2005|2006|2007|2008)\b/);
-
-  const retriever = vectorStore.asRetriever({
-    k: 15,
-    similarityThreshold: 0.6,
-    filter: match ? (doc) => doc.metadata.month.includes(match[0]) : null // NOT WORKING...
-  });
-
-  const docs = await retriever.invoke(question);
-
-  const isCreative = question.includes('#creative');
-  const systemPrompt = isCreative ? JSON.parse(JSON.stringify(systemPrompts.creative)) : JSON.parse(JSON.stringify(systemPrompts.default));
-  if (isCreative) {
-    question = question.replace('#creative', '');
-  }
-
+  const isCreative = question.toLowerCase().includes('#creative');
   const personalName = process.env.PERSONAL_NAME;
   const senderName = process.env.SENDER_NAME;
-  const isPersonalName = question.includes(`#${personalName.toLowerCase()}`);
-  const isSenderName = question.includes(`#${senderName.toLowerCase()}`);
+  const personalTag = `#${personalName.toLowerCase()}`;
+  const senderTag = `#${senderName.toLowerCase()}`;
+  const isPersonalName = question.toLowerCase().includes(personalTag);
+  const isSenderName = question.toLowerCase().includes(senderTag);
+  const retrievalQuestion = question
+    .replace(/#creative/gi, '')
+    .replace(new RegExp(personalTag, 'ig'), '')
+    .replace(new RegExp(senderTag, 'ig'), '');
+  const historyContext = getConversationHistory(conversationKey)
+    .slice(-6)
+    .map((message) => `${message.role ?? 'user'}: ${message.content}`)
+    .join('\n');
+  const retrievalQuery = historyContext
+    ? `Eerdere conversatie:\n${historyContext}\n\nNieuwe vraag:\n${retrievalQuestion}`
+    : retrievalQuestion;
+
+  const vectorStore = await getVectorStore(email);
+  const retriever = vectorStore.asRetriever({ k: RETRIEVAL_CANDIDATES });
+  const retrievalQueries = historyContext
+    ? [retrievalQuestion, retrievalQuery]
+    : [retrievalQuestion];
+  const retrievedResults = await Promise.all(
+    retrievalQueries.map((query) => retriever.invoke(query)),
+  );
+  const retrievedDocs = retrievedResults.flat();
+  const docs = deduplicateDocuments(retrievedDocs).slice(0, MAX_CONTEXT_DOCUMENTS);
+
+  const systemPrompt = isCreative ? JSON.parse(JSON.stringify(systemPrompts.creative)) : JSON.parse(JSON.stringify(systemPrompts.default));
+  if (isCreative) {
+    question = question.replace(/#creative/gi, '');
+  }
 
   if (isPersonalName || isSenderName) {
     const identity = isPersonalName ? personalName : senderName;
@@ -117,7 +158,7 @@ async function askQuestion(question, questionAskedBy, email, conversationKey = q
     systemPrompt.splice(3, 2);
     systemPrompt.shift();
     systemPrompt.push(systemPrompts.identity.replace(/NAME/g, identity).replace(/SENDER/g, questionAskedBy).replace(/OTHER/g, otherPerson));
-    question = question.replace(`#${identity.toLowerCase()}`, '');
+    question = question.replace(new RegExp(`#${identity.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'ig'), '');
   }
   console.log(systemPrompt);
 
@@ -172,7 +213,7 @@ async function analyzeImage(image, question, questionAskedBy, email, conversatio
     : JSON.stringify(imageDescriptionResponse.content);
 
   const vectorStore = await getVectorStore(email);
-  const retriever = vectorStore.asRetriever({k: 15, similarityThreshold: 0.6});
+  const retriever = vectorStore.asRetriever({k: 15});
   const docs = await retriever.invoke(`${imageQuestion}\nVisuele beschrijving: ${imageDescription}`);
   const messages = [...getConversationHistory(conversationKey), imageMessage];
   const answer = await documentChain.invoke({
