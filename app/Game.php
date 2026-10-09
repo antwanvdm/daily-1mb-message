@@ -219,21 +219,46 @@ final class Game
     {
         $default = ['scores' => [PERSONAL_NAME => 0, SENDER_NAME => 0], 'active' => null];
         if (!is_file(self::STATE_FILE)) {
+            Logger::info('Game state missing: ' . self::STATE_FILE);
             return $default;
         }
-        $state = json_decode((string) file_get_contents(self::STATE_FILE), true);
-        return is_array($state) ? array_replace_recursive($default, $state) : $default;
+
+        $contents = file_get_contents(self::STATE_FILE);
+        $state = json_decode((string) $contents, true);
+        if (!is_array($state)) {
+            Logger::info('Game state invalid: ' . self::STATE_FILE);
+            return $default;
+        }
+
+        $state = array_replace_recursive($default, $state);
+        Logger::info('Game state read: ' . json_encode([
+            'file' => self::STATE_FILE,
+            'activeRound' => is_array($state['active']) ? ($state['active']['id'] ?? null) : null,
+        ], JSON_UNESCAPED_UNICODE));
+        return $state;
     }
 
     private function writeState(array $state): void
     {
         $directory = dirname(self::STATE_FILE);
-        if (!is_dir($directory)) {
-            mkdir($directory, 0770, true);
+        if (!is_dir($directory) && !mkdir($directory, 0770, true) && !is_dir($directory)) {
+            throw new \RuntimeException('Could not create game state directory: ' . $directory);
         }
+
         $temporary = $directory . '/game-state.json.' . bin2hex(random_bytes(8)) . '.tmp';
-        file_put_contents($temporary, json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR), LOCK_EX);
-        rename($temporary, self::STATE_FILE);
+        $contents = json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+        if (file_put_contents($temporary, $contents, LOCK_EX) === false) {
+            throw new \RuntimeException('Could not write temporary game state: ' . $temporary);
+        }
+        if (!rename($temporary, self::STATE_FILE)) {
+            @unlink($temporary);
+            throw new \RuntimeException('Could not replace game state: ' . self::STATE_FILE);
+        }
+
+        Logger::info('Game state written: ' . json_encode([
+            'file' => self::STATE_FILE,
+            'activeRound' => is_array($state['active']) ? ($state['active']['id'] ?? null) : null,
+        ], JSON_UNESCAPED_UNICODE));
     }
 
     private function scoreText(array $state): string
