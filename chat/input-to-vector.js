@@ -8,7 +8,7 @@ import path from 'node:path';
 
 const WINDOW_SIZE = 12;
 const WINDOW_OVERLAP = 4;
-const INDEX_VERSION = 'v2';
+const INDEX_VERSION = 'v3';
 const EMBEDDING_BATCH_SIZE = 32;
 const MAX_RETRIES = 8;
 const CHECKPOINT_INTERVAL = 10;

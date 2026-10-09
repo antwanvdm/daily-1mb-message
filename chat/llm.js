@@ -55,6 +55,8 @@ Geen geschreven elementen in de afbeelding.
 
 const embeddings = new OpenAIEmbeddings({
   apiKey: process.env.OPENAI_API_KEY,
+  model: 'text-embedding-3-small',
+  dimensions: 256,
   batchSize: 32,
 });
 
@@ -82,7 +84,7 @@ const documentChain = await createStuffDocumentsChain({
  */
 async function getVectorStore(email) {
   if (!vectorStoreCache.has(email)) {
-    const directory = `store/${process.env.AI_PROVIDER}/${email}/v2`;
+    const directory = `store/${process.env.AI_PROVIDER}/${email}/v3`;
     const loadingStore = FaissStore.load(directory, embeddings).catch((error) => {
       vectorStoreCache.delete(email);
       throw error;
