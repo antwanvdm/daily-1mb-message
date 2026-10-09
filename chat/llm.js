@@ -13,7 +13,6 @@ const chatModel = new ChatOpenAI({
 });
 
 const conversationHistory = new Map();
-const vectorStoreCache = new Map();
 const HISTORY_TTL_MS = 5 * 60 * 1000;
 const RETRIEVAL_CANDIDATES = 30;
 const MAX_CONTEXT_DOCUMENTS = 12;
@@ -83,15 +82,8 @@ const documentChain = await createStuffDocumentsChain({
  * @returns {FaissStore}
  */
 async function getVectorStore(email) {
-  if (!vectorStoreCache.has(email)) {
-    const directory = `store/${process.env.AI_PROVIDER}/${email}/v3`;
-    const loadingStore = FaissStore.load(directory, embeddings).catch((error) => {
-      vectorStoreCache.delete(email);
-      throw error;
-    });
-    vectorStoreCache.set(email, loadingStore);
-  }
-  return vectorStoreCache.get(email);
+  const directory = `store/${process.env.AI_PROVIDER}/${email}/v3`;
+  return FaissStore.load(directory, embeddings);
 }
 
 function deduplicateDocuments(documents) {
