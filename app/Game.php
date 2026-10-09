@@ -9,7 +9,7 @@ use Longman\TelegramBot\Request;
 
 final class Game
 {
-    private const STATE_FILE = __DIR__ . '/../game-state.json';
+    private const STATE_FILE = __DIR__ . '/../game-state/game-state.json';
 
     public function menu(): array
     {

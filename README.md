@@ -83,7 +83,7 @@ The channel command `/game` opens an inline-button game menu with when, who,
 score, and stop actions. Game rounds use messages from the existing archive,
 wait for answers from both configured players, and never reveal the correct
 answer. The minimal score and active-round state is stored atomically in
-`game-state.json` in the project root. Player attribution uses configured names and
+`game-state/game-state.json` in the project root. Player attribution uses configured names and
 Telegram channel `author_signature`; no Telegram user registration or IDs are
 stored. Configure `PERSONAL_NAME` and `SENDER_NAME` in `settings.php`. A stop
 cancels the round without awarding points.
