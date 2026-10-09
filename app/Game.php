@@ -17,7 +17,7 @@ final class Game
             'text' => "🎮 Spel\nKies een spel:",
             'reply_markup' => new InlineKeyboard(
                 [
-                    ['text' => 'Jaar', 'callback_data' => 'game:start:year'],
+                    ['text' => 'Wanneer', 'callback_data' => 'game:start:when'],
                     ['text' => 'Wie', 'callback_data' => 'game:start:who'],
                 ],
                 [
@@ -54,7 +54,7 @@ final class Game
         }
         if (str_starts_with($action, 'start:')) {
             $type = substr($action, 6);
-            if (!in_array($type, ['year', 'who'], true)) {
+            if (!in_array($type, ['when', 'who'], true)) {
                 return true;
             }
             if ($state['active'] !== null) {
@@ -72,10 +72,15 @@ final class Game
             return true;
         }
         if (str_starts_with($action, 'answer:')) {
-            $answerIndex = filter_var(substr($action, 7), FILTER_VALIDATE_INT);
+            [$roundId, $answerValue] = array_pad(explode(':', substr($action, 7), 2), 2, null);
+            $answerIndex = filter_var($answerValue, FILTER_VALIDATE_INT);
             $active = $state['active'];
-            if (!is_array($active) || $answerIndex === false || !isset($active['options'][$answerIndex])) {
+            if (!is_array($active) || !hash_equals((string) ($active['id'] ?? ''), (string) $roundId)) {
                 $this->send('Er is geen actieve ronde.');
+                return true;
+            }
+            if ($answerIndex === false || !isset($active['options'][$answerIndex])) {
+                $this->send('Dit antwoord hoort niet bij de actieve ronde.');
                 return true;
             }
             $answer = $active['options'][$answerIndex];
@@ -113,31 +118,62 @@ final class Game
         if (!$message instanceof ChatMessage) {
             throw new \RuntimeException('No archive message found');
         }
-        $year = (int) date('Y', strtotime($message->date));
-        $options = $type === 'year'
-            ? [(string) ($year - 2), (string) ($year - 1), (string) $year, (string) ($year + 1)]
+        $timestamp = strtotime($message->date);
+        $answerDate = $type === 'when' ? $this->formatMonthYear($timestamp) : null;
+        $options = $type === 'when'
+            ? $this->monthOptions($timestamp, $answerDate)
             : [PERSONAL_NAME, SENDER_NAME, 'Groepschat'];
         shuffle($options);
-        $answer = $type === 'year'
-            ? (string) $year
+        $answer = $type === 'when'
+            ? $answerDate
             : match ($message->messenger) {
                 Messenger::Self => PERSONAL_NAME,
                 Messenger::Sender => SENDER_NAME,
                 default => 'Groepschat',
             };
         return [
+            'id' => bin2hex(random_bytes(8)),
             'type' => $type,
-            'question' => "🎮 Kies het juiste antwoord voor dit archiefbericht:\n\n{$message->message}",
+            'question' => ($type === 'when'
+                ? "🎮 Wanneer is het volgende bericht verstuurd?"
+                : "🎮 Wie heeft het volgende bericht verstuurd?") . "\n\n{$message->message}",
             'options' => $options,
             'answer' => $answer,
             'answers' => [],
         ];
     }
 
+    private function formatMonthYear(int $timestamp): string
+    {
+        $months = [
+            1 => 'januari', 2 => 'februari', 3 => 'maart', 4 => 'april',
+            5 => 'mei', 6 => 'juni', 7 => 'juli', 8 => 'augustus',
+            9 => 'september', 10 => 'oktober', 11 => 'november', 12 => 'december',
+        ];
+        return $months[(int) date('n', $timestamp)] . ' ' . date('Y', $timestamp);
+    }
+
+    private function monthOptions(int $answerTimestamp, string $answer): array
+    {
+        $start = strtotime('2003-10-01');
+        $end = strtotime('2008-02-01');
+        $options = [$answer];
+        while (count($options) < 4) {
+            $timestamp = strtotime('+' . random_int(0, 52) . ' months', $start);
+            if ($timestamp <= $end) {
+                $option = $this->formatMonthYear($timestamp);
+                if (!in_array($option, $options, true)) {
+                    $options[] = $option;
+                }
+            }
+        }
+        return $options;
+    }
+
     private function answerKeyboard(array $active): InlineKeyboard
     {
         return new InlineKeyboard(...array_chunk(array_map(
-            static fn (string $option, int $index): array => ['text' => $option, 'callback_data' => 'game:answer:' . $index],
+            static fn (string $option, int $index): array => ['text' => $option, 'callback_data' => 'game:answer:' . $active['id'] . ':' . $index],
             $active['options'],
             array_keys($active['options']),
         ), 2));

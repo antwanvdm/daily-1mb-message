@@ -75,7 +75,7 @@ are kept in memory for five minutes. A photo post is sent to `/analyze-image` fo
 OpenAI vision analysis. Add `#creative` for the creative prompt and `#image` to
 request an image generated with OpenAI `gpt-image-1`.
 
-The channel command `/game` opens an inline-button game menu with year, who,
+The channel command `/game` opens an inline-button game menu with when, who,
 score, and stop actions. Game rounds use messages from the existing archive,
 wait for answers from both configured players, and never reveal the correct
 answer. The minimal score and active-round state is stored atomically in
