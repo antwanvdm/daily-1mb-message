@@ -8,7 +8,8 @@ import { ChatPromptTemplate, MessagesPlaceholder, PromptTemplate, } from '@langc
 
 const chatModel = new ChatOpenAI({
   temperature: 0,
-  model: 'gpt-4o',
+  model: 'gpt-6-luna',
+  reasoning: {effort: 'none'},
   apiKey: process.env.OPENAI_API_KEY
 });
 
